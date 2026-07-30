@@ -1,25 +1,19 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/layout/Header.astro";
+import Hero from "../components/sections/Hero.astro";
 import Footer from "../components/layout/Footer.astro";
 ---
 
 <BaseLayout
   title="Workflow Vault"
-  description="Production-ready AI automation workflows and implementation guides."
+  description="Production-ready AI automation workflows."
 >
-  <Header />
 
-  <main>
-    <h1>Workflow Vault</h1>
+<Header />
 
-    <p>
-      Discover production-ready AI workflows, automation guides,
-      Cloudflare Workers, GitHub Actions, APIs, and no-code automations.
-    </p>
+<Hero />
 
-    <p>🚧 Website under construction.</p>
-  </main>
+<Footer />
 
-  <Footer />
 </BaseLayout>
