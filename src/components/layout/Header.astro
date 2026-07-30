@@ -1,12 +1,88 @@
-<header>
-  <nav>
-    <a href="/">Workflow Vault</a>
+---
+const links = [
+  { name: "Home", href: "/" },
+  { name: "Workflows", href: "/workflows" },
+  { name: "Categories", href: "/categories" },
+  { name: "About", href: "/about" }
+];
+---
 
-    <ul>
-      <li><a href="/">Home</a></li>
-      <li><a href="/workflows">Workflows</a></li>
-      <li><a href="/categories">Categories</a></li>
-      <li><a href="/about">About</a></li>
-    </ul>
-  </nav>
+<header class="header">
+  <div class="container nav">
+
+    <a href="/" class="logo">
+      Workflow<span>Vault</span>
+    </a>
+
+    <nav>
+      {
+        links.map(link => (
+          <a href={link.href}>{link.name}</a>
+        ))
+      }
+    </nav>
+
+    <a href="/workflows" class="button">
+      Explore
+    </a>
+
+  </div>
 </header>
+
+<style>
+.header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+
+  background:rgba(9,9,9,.75);
+  backdrop-filter:blur(14px);
+
+  border-bottom:1px solid var(--border);
+}
+
+.nav{
+  height:78px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  font-size:1.3rem;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+
+.logo span{
+  color:var(--accent);
+}
+
+nav{
+  display:flex;
+  gap:2rem;
+}
+
+nav a{
+  color:var(--text-muted);
+  transition:.25s;
+}
+
+nav a:hover{
+  color:white;
+}
+
+@media(max-width:768px){
+
+  nav{
+    display:none;
+  }
+
+  .button{
+    padding:10px 18px;
+    font-size:.9rem;
+  }
+
+}
+</style>
