@@ -1,0 +1,153 @@
+---
+const workflows = [
+  {
+    tool: "n8n",
+    tag: "Self-Hosted",
+    title: "Self-host n8n with Docker + Caddy",
+    description: "A production n8n stack with automatic HTTPS and persistent workflow storage on a $5 VPS.",
+    href: "/workflows/n8n-docker-caddy",
+  },
+  {
+    tool: "GitHub Actions",
+    tag: "CI/CD",
+    title: "Zero-downtime deploy pipeline",
+    description: "Trigger builds on push, run tests in parallel, and deploy to Cloudflare Pages automatically.",
+    href: "/workflows/github-actions-deploy",
+  },
+  {
+    tool: "Cloudflare Workers",
+    tag: "Edge",
+    title: "Rate-limited API proxy at the edge",
+    description: "Use Workers KV and Durable Objects to throttle requests before they reach your origin.",
+    href: "/workflows/cloudflare-rate-limit",
+  },
+  {
+    tool: "Claude + Notion",
+    tag: "AI Agent",
+    title: "Auto-summarize meeting notes into Notion",
+    description: "Pipe transcripts through Claude and push structured summaries straight into a Notion database.",
+    href: "/workflows/claude-notion-summaries",
+  },
+  {
+    tool: "Zapier",
+    tag: "No-Code",
+    title: "When to graduate from Zapier",
+    description: "A practical checklist for migrating high-volume Zaps to n8n or Workers before the bill spikes.",
+    href: "/workflows/zapier-migration",
+  },
+  {
+    tool: "Google Sheets",
+    tag: "OCR",
+    title: "OCR receipts straight into a spreadsheet",
+    description: "Scan receipts, extract line items with OCR, and log them to Google Sheets automatically.",
+    href: "/workflows/ocr-receipts-sheets",
+  },
+];
+---
+
+<section class="featured">
+  <div class="container">
+    <div class="heading">
+      <p class="eyebrow">Featured Workflows</p>
+      <h2>Guides people actually ship</h2>
+      <p class="subtitle">Hand-picked, production-tested workflows across the automation stacks builders use most.</p>
+    </div>
+
+    <div class="grid workflows-grid">
+      {workflows.map((w) => (
+        <a href={w.href} class="card workflow-card">
+          <div class="card-top">
+            <span class="tool">{w.tool}</span>
+            <span class="tag">{w.tag}</span>
+          </div>
+          <h3>{w.title}</h3>
+          <p>{w.description}</p>
+          <span class="link">View guide &rarr;</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .heading {
+    max-width: 640px;
+    margin-bottom: var(--space-6);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    margin-top: var(--space-2);
+  }
+
+  .workflows-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workflow-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    border-radius: 20px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .tool {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .tag {
+    font-size: var(--fs-xs);
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, .12);
+    color: var(--accent);
+  }
+
+  .workflow-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .workflow-card p {
+    font-size: var(--fs-sm);
+    flex-grow: 1;
+  }
+
+  .link {
+    margin-top: var(--space-3);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+  }
+
+  @media (max-width: 900px) {
+    .workflows-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .workflows-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
