@@ -1,0 +1,88 @@
+---
+const features = [
+  {
+    title: "Production-ready, not proof-of-concept",
+    description: "Every guide is built to run in production, with error handling, retries, and monitoring included instead of skipped.",
+  },
+  {
+    title: "Step-by-step, not a demo video",
+    description: "Exact configuration, code, and screenshots — no scrubbing through a 40-minute video to find one setting.",
+  },
+  {
+    title: "Source code included",
+    description: "Clone the repo, copy the workflow JSON, or fork the Worker. Every guide ships with the real files.",
+  },
+  {
+    title: "Multi-tool, not vendor-locked",
+    description: "n8n, Make, Zapier, Workers, Actions — pick the stack that fits your budget and skill level, not ours.",
+  },
+];
+---
+
+<section class="features">
+  <div class="container">
+    <div class="heading">
+      <p class="eyebrow">Why Workflow Vault</p>
+      <h2>Built for people who ship</h2>
+    </div>
+
+    <div class="grid features-grid">
+      {features.map((f) => (
+        <div class="card feature-card">
+          <span class="mark"></span>
+          <h3>{f.title}</h3>
+          <p>{f.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .heading {
+    max-width: 560px;
+    margin-bottom: var(--space-6);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feature-card {
+    padding: var(--space-4);
+    border-radius: 20px;
+  }
+
+  .mark {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  .feature-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .feature-card p {
+    font-size: var(--fs-sm);
+  }
+
+  @media (max-width: 700px) {
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
