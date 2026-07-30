@@ -1,9 +1,156 @@
-<footer>
-  <hr />
+---
+const year = new Date().getFullYear();
 
-  <p>© {new Date().getFullYear()} Workflow Vault</p>
+const columns = [
+  {
+    heading: "Product",
+    links: [
+      { label: "Workflows", href: "/workflows" },
+      { label: "Categories", href: "/categories" },
+    ],
+  },
+  {
+    heading: "Resources",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "GitHub", href: "https://github.com/lubinda2003/Workflow-valt" },
+    ],
+  },
+  {
+    heading: "Stack",
+    links: [
+      { label: "n8n", href: "/categories/n8n" },
+      { label: "Make", href: "/categories/make" },
+      { label: "Zapier", href: "/categories/zapier" },
+      { label: "GitHub Actions", href: "/categories/github-actions" },
+    ],
+  },
+];
+---
 
-  <p>
-    Learn • Build • Automate
-  </p>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="brand">
+        <p class="logo">Workflow<span>Vault</span></p>
+        <p class="tagline">Production-ready automation guides for developers, freelancers, and agencies.</p>
+      </div>
+
+      <div class="columns">
+        {columns.map((col) => (
+          <div class="column">
+            <p class="col-heading">{col.heading}</p>
+            <ul>
+              {col.links.map((link) => (
+                <li><a href={link.href}>{link.label}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="footer-bottom">
+      <p>&copy; {year} Workflow Vault</p>
+      <p>Learn &middot; Build &middot; Automate</p>
+    </div>
+  </div>
 </footer>
+
+<style>
+  .site-footer {
+    padding: var(--space-6) 0 var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr;
+    gap: var(--space-5);
+  }
+
+  .brand .logo {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -.03em;
+    margin-bottom: var(--space-2);
+  }
+
+  .brand .logo span {
+    color: var(--accent);
+  }
+
+  .brand .tagline {
+    max-width: 320px;
+    font-size: var(--fs-sm);
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .col-heading {
+    color: var(--text);
+    font-weight: 700;
+    font-size: var(--fs-xs);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .column ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+  }
+
+  .column a {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    transition: var(--transition);
+  }
+
+  .column a:hover {
+    color: var(--text);
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: var(--space-5) 0 var(--space-3);
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .footer-bottom p {
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 800px) {
+    .footer-top {
+      grid-template-columns: 1fr;
+    }
+
+    .columns {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .columns {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
