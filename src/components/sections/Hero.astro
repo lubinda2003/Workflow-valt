@@ -1,12 +1,6 @@
 <section class="hero">
-
-  <div class="glow glow-1"></div>
-  <div class="glow glow-2"></div>
-
-  <div class="container hero-grid">
-
-    <div class="left">
-
+  <div class="container">
+    <div class="hero-content">
       <p class="eyebrow">AI AUTOMATION PLATFORM</p>
 
       <h1>
@@ -15,93 +9,68 @@
       </h1>
 
       <p class="description">
-        Production-ready automation guides, templates, APIs, Cloudflare Workers,
-        GitHub Actions and AI workflows that help you build faster.
+        Production-ready automation guides, templates, Cloudflare Workers,
+        GitHub Actions, APIs, and AI workflows.
       </p>
 
       <div class="buttons">
-
-        <a href="/workflows" class="button">
-          Explore Workflows
-        </a>
-
-        <a href="/categories" class="secondary">
-          Browse Categories
-        </a>
-
+        <a href="/workflows" class="button">Explore Workflows</a>
+        <a href="/categories" class="secondary">Browse Categories</a>
       </div>
-
     </div>
 
-    <div class="right">
-
-      <div class="dashboard">
-
-        <div class="topbar">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
-
-        <div class="workflow-card active">
-          <span>🤖 AI Research Agent</span>
-          <strong>Running</strong>
-        </div>
-
-        <div class="workflow-card">
-          <span>✍️ Content Generator</span>
-          <strong>Completed</strong>
-        </div>
-
-        <div class="workflow-card">
-          <span>⚡ GitHub Actions</span>
-          <strong>Queued</strong>
-        </div>
-
-        <div class="workflow-card">
-          <span>☁️ Cloudflare Deploy</span>
-          <strong>Success</strong>
-        </div>
-
-        <div class="progress">
-          <div class="bar"></div>
-        </div>
-
+    <div class="dashboard">
+      <div class="topbar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
       </div>
 
-    </div>
+      <div class="workflow-card">
+        <span>🤖 AI Research Agent</span>
+        <strong>Running</strong>
+      </div>
 
+      <div class="workflow-card">
+        <span>✍️ Content Generator</span>
+        <strong>Completed</strong>
+      </div>
+
+      <div class="workflow-card">
+        <span>☁️ Cloudflare Deploy</span>
+        <strong>Success</strong>
+      </div>
+
+      <div class="progress">
+        <div class="bar"></div>
+      </div>
+    </div>
   </div>
-
 </section>
 
 <style>
-
 .hero{
-  position:relative;
-  overflow:hidden;
-  padding:120px 0;
+  padding:6rem 0;
 }
 
-.hero-grid{
+.container{
   display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:70px;
+  grid-template-columns:1fr 1fr;
+  gap:3rem;
   align-items:center;
 }
 
 .eyebrow{
   color:var(--accent);
   font-weight:700;
-  letter-spacing:.18em;
-  margin-bottom:24px;
+  letter-spacing:.15em;
+  margin-bottom:1rem;
 }
 
 .hero h1{
-  font-size:clamp(3rem,7vw,6rem);
-  line-height:.95;
-  font-weight:800;
-  margin-bottom:28px;
+  font-size:clamp(3rem,7vw,5.5rem);
+  line-height:1;
+  margin-bottom:1.5rem;
 }
 
 .hero h1 span{
@@ -109,29 +78,40 @@
 }
 
 .description{
-  font-size:1.2rem;
-  color:var(--muted);
-  line-height:1.8;
-  max-width:650px;
+  font-size:1.15rem;
+  max-width:600px;
 }
 
 .buttons{
   display:flex;
-  gap:18px;
-  margin-top:42px;
+  gap:1rem;
   flex-wrap:wrap;
+  margin-top:2rem;
+}
+
+.secondary{
+  padding:14px 24px;
+  border:1px solid var(--border);
+  border-radius:999px;
 }
 
 .dashboard{
-  background:#111;
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:24px;
+  border-radius:20px;
   padding:24px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  box-shadow:0 20px 60px rgba(0,0,0,.45);
 }
 
 .topbar{
-  display
+  display:flex;
+  gap:8px;
+  margin-bottom:20px;
+}
+
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+
+.red{background:#ff
