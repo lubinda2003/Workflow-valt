@@ -1,21 +1,25 @@
 ---
-const title = "Workflow Vault";
-const description = "Production-ready AI automation workflows and implementation guides.";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-  </head>
+<BaseLayout
+  title="Workflow Vault"
+  description="Production-ready AI automation workflows and implementation guides."
+>
+  <Header />
 
-  <body>
-    <main>
-      <h1>Workflow Vault</h1>
-      <p>🚀 Your AI Automation Workflow Library is under construction.</p>
-    </main>
-  </body>
-</html>
+  <main>
+    <h1>Workflow Vault</h1>
+
+    <p>
+      Discover production-ready AI workflows, automation guides,
+      Cloudflare Workers, GitHub Actions, APIs, and no-code automations.
+    </p>
+
+    <p>🚧 Website under construction.</p>
+  </main>
+
+  <Footer />
+</BaseLayout>
