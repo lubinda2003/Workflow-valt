@@ -1,0 +1,78 @@
+---
+---
+
+<section class="cta">
+  <div class="container">
+    <div class="cta-card">
+      <h2>Stop rebuilding the same automation twice</h2>
+      <p>Get instant access to every workflow guide, template, and source file in the vault.</p>
+      <div class="actions">
+        <a href="/workflows" class="button">Browse the vault</a>
+        <a href="/about" class="secondary">How it works</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-card {
+    position: relative;
+    overflow: hidden;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+  }
+
+  .cta-card::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(circle at center, rgba(255, 107, 0, .18), transparent 60%);
+    pointer-events: none;
+  }
+
+  .cta-card h2 {
+    position: relative;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    max-width: 700px;
+    margin: 0 auto var(--space-2);
+  }
+
+  .cta-card p {
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto;
+    font-size: var(--fs-md);
+  }
+
+  .actions {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .secondary {
+    padding: .9rem 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    transition: var(--transition);
+  }
+
+  .secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  @media (max-width: 600px) {
+    .cta-card {
+      padding: var(--space-5) var(--space-3);
+    }
+  }
+</style>
