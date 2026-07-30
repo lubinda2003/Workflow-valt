@@ -1,0 +1,79 @@
+---
+const categories = [
+  { name: "AI Agents", tools: "OpenAI · Claude · Gemini · Groq" },
+  { name: "n8n", tools: "Self-hosted automation" },
+  { name: "Make", tools: "Visual scenario builder" },
+  { name: "Zapier", tools: "No-code integrations" },
+  { name: "GitHub Actions", tools: "CI/CD & repo automation" },
+  { name: "Cloudflare Workers", tools: "Edge functions & APIs" },
+  { name: "Data & OCR", tools: "Notion · Airtable · Sheets" },
+  { name: "APIs", tools: "Webhooks & integrations" },
+];
+
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+---
+
+<section class="categories">
+  <div class="container">
+    <div class="heading">
+      <p class="eyebrow">Browse by Category</p>
+      <h2>Find your stack</h2>
+    </div>
+
+    <div class="grid categories-grid">
+      {categories.map((c) => (
+        <a href={`/categories/${slugify(c.name)}`} class="card category-card">
+          <h3>{c.name}</h3>
+          <p>{c.tools}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .heading {
+    margin-bottom: var(--space-6);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .category-card {
+    padding: var(--space-3);
+    border-radius: 20px;
+  }
+
+  .category-card h3 {
+    font-size: 1.05rem;
+    margin-bottom: .4rem;
+  }
+
+  .category-card p {
+    font-size: var(--fs-xs);
+  }
+
+  @media (max-width: 900px) {
+    .categories-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 500px) {
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
