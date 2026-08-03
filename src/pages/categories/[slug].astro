@@ -1,0 +1,121 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/layout/Header.astro";
+import Footer from "../../components/layout/Footer.astro";
+import WorkflowCard from "../../components/content/WorkflowCard.astro";
+import { slugify } from "../../lib/slugify.js";
+
+export async function getStaticPaths() {
+  const categories = await getCollection("categories");
+  const workflows = await getCollection("workflows");
+
+  return categories.map((category) => {
+    const categoryWorkflows = workflows
+      .map((entry) => entry.data)
+      .filter((workflow) => slugify(workflow.category) === category.data.slug);
+
+    return {
+      params: { slug: category.data.slug },
+      props: { category: category.data, workflows: categoryWorkflows },
+    };
+  });
+}
+
+const { category, workflows } = Astro.props;
+---
+
+<BaseLayout
+  title={`${category.name} — Workflow Vault`}
+  description={category.description}
+>
+
+<Header />
+
+<main>
+  <section class="category-detail">
+    <div class="container">
+      <a href="/categories" class="back">&larr; All categories</a>
+
+      <p class="eyebrow">Category</p>
+      <h1>{category.name}</h1>
+      <p class="description">{category.description}</p>
+
+      {workflows.length > 0 ? (
+        <div class="grid workflows-grid">
+          {workflows.map((workflow) => (
+            <WorkflowCard
+              slug={workflow.slug}
+              title={workflow.title}
+              description={workflow.description}
+              category={workflow.category}
+              difficulty={workflow.difficulty}
+              readingTime={workflow.readingTime}
+              tools={workflow.tools}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="empty">No workflows in this category yet. Check back soon.</p>
+      )}
+    </div>
+  </section>
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<style>
+  .back {
+    display: inline-block;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin-bottom: var(--space-4);
+    transition: var(--transition);
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    margin-bottom: var(--space-2);
+  }
+
+  .description {
+    max-width: 600px;
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-6);
+  }
+
+  .workflows-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .empty {
+    font-size: var(--fs-md);
+  }
+
+  @media (max-width: 900px) {
+    .workflows-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .workflows-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
