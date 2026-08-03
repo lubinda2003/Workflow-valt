@@ -1,0 +1,105 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import { getAllCategories } from "../lib/categories.js";
+
+const categories = await getAllCategories();
+---
+
+<BaseLayout
+  title="Categories — Workflow Vault"
+  description="Browse every automation category in the vault, from AI agents to edge APIs."
+>
+
+<Header />
+
+<main>
+  <section class="categories-index">
+    <div class="container">
+      <div class="heading">
+        <p class="eyebrow">All Categories</p>
+        <h1>Find your stack</h1>
+        <p class="subtitle">{categories.length} categories covering the tools builders reach for most.</p>
+      </div>
+
+      <div class="grid categories-grid">
+        {categories.map((category) => (
+          <a href={`/categories/${category.slug}`} class="card category-card">
+            <h3>{category.name}</h3>
+            <p>{category.description}</p>
+            <span class="link">Browse category &rarr;</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<style>
+  .heading {
+    max-width: 640px;
+    margin-bottom: var(--space-6);
+  }
+
+  .heading h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    margin-top: var(--space-2);
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .category-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    border-radius: 20px;
+  }
+
+  .category-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .category-card p {
+    font-size: var(--fs-sm);
+    flex-grow: 1;
+  }
+
+  .link {
+    margin-top: var(--space-3);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+  }
+
+  @media (max-width: 900px) {
+    .categories-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
