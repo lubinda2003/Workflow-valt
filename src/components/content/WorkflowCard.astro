@@ -1,0 +1,90 @@
+---
+import Badge from "./Badge.astro";
+import ToolTag from "./ToolTag.astro";
+
+export interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  readingTime: string;
+  tools: string[];
+}
+
+const { slug, title, description, category, difficulty, readingTime, tools } = Astro.props;
+---
+
+<a href={`/workflows/${slug}`} class="card workflow-card">
+  <div class="card-top">
+    <span class="category">{category}</span>
+    <Badge label={difficulty} tone="accent" />
+  </div>
+
+  <h3>{title}</h3>
+  <p>{description}</p>
+
+  <div class="tools">
+    {tools.slice(0, 3).map((tool) => <ToolTag label={tool} />)}
+  </div>
+
+  <div class="card-bottom">
+    <span class="reading-time">{readingTime} read</span>
+    <span class="link">View guide &rarr;</span>
+  </div>
+</a>
+
+<style>
+  .workflow-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    border-radius: 20px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .category {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .workflow-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .workflow-card p {
+    font-size: var(--fs-sm);
+    flex-grow: 1;
+  }
+
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: var(--space-3) 0;
+  }
+
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .link {
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
