@@ -15,6 +15,22 @@ const workflows = defineCollection({
     tags: z.array(z.string()),
     tools: z.array(z.string()),
     cover: z.string().optional(),
+    overview: z.string(),
+    prerequisites: z.array(z.string()),
+    steps: z.array(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+        code: z
+          .object({
+            language: z.string(),
+            code: z.string(),
+          })
+          .optional(),
+      })
+    ),
+    architecture: z.string(),
+    result: z.string(),
   }),
 });
 
