@@ -1,0 +1,12 @@
+{
+  "slug": "github-actions-deploy",
+  "title": "Zero-downtime deploy pipeline",
+  "description": "Trigger builds on push, run tests in parallel, and deploy to Cloudflare Pages automatically.",
+  "category": "GitHub Actions",
+  "difficulty": "Intermediate",
+  "readingTime": "10 min",
+  "featured": true,
+  "tags": ["CI/CD", "GitHub Actions", "Cloudflare Pages"],
+  "tools": ["GitHub Actions", "Cloudflare Pages"],
+  "cover": "/images/workflows/github-actions-deploy.webp"
+}
