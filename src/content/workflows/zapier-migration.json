@@ -1,0 +1,12 @@
+{
+  "slug": "zapier-migration",
+  "title": "When to graduate from Zapier",
+  "description": "A practical checklist for migrating high-volume Zaps to n8n or Workers before the bill spikes.",
+  "category": "Zapier",
+  "difficulty": "Beginner",
+  "readingTime": "8 min",
+  "featured": true,
+  "tags": ["Zapier", "n8n", "Migration"],
+  "tools": ["Zapier", "n8n", "Cloudflare Workers"],
+  "cover": "/images/workflows/zapier-migration.webp"
+}
