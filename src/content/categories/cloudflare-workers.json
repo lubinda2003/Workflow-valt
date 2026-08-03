@@ -1,0 +1,5 @@
+{
+  "slug": "cloudflare-workers",
+  "name": "Cloudflare Workers",
+  "description": "Edge functions and APIs deployed globally on Cloudflare's network."
+}
