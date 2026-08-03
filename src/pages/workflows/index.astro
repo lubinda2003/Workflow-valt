@@ -1,34 +1,86 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import Header from "../../components/layout/Header.astro";
-import Footer from "../../components/layout/Footer.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import WorkflowCard from "../components/content/WorkflowCard.astro";
+import { getAllWorkflows } from "../lib/workflows.js";
+
+const workflows = await getAllWorkflows();
 ---
 
 <BaseLayout
-  title="Workflows | Workflow Vault"
-  description="Browse production-ready AI automation workflows."
+  title="Workflows — Workflow Vault"
+  description="Browse every production-ready automation workflow in the vault."
 >
-  <Header />
 
-  <main>
-    <h1>Workflows</h1>
+<Header />
 
-    <p>
-      Browse our collection of production-ready AI automation workflows,
-      integrations, and implementation guides.
-    </p>
+<main>
+  <section class="workflows-index">
+    <div class="container">
+      <div class="heading">
+        <p class="eyebrow">All Workflows</p>
+        <h1>Browse the vault</h1>
+        <p class="subtitle">{workflows.length} production-ready guides across n8n, Make, Zapier, GitHub Actions, Cloudflare Workers, and more.</p>
+      </div>
 
-    <ul>
-      <li>🤖 AI Workflows</li>
-      <li>🔄 Automation</li>
-      <li>☁️ Cloud & APIs</li>
-      <li>💼 Business Automation</li>
-      <li>🛠 Developer Workflows</li>
-      <li>📊 Data & Integrations</li>
-      <li>📧 Productivity Automation</li>
-      <li>🚀 Self-hosted & Open Source</li>
-    </ul>
-  </main>
+      <div class="grid workflows-grid">
+        {workflows.map((workflow) => (
+          <WorkflowCard
+            slug={workflow.slug}
+            title={workflow.title}
+            description={workflow.description}
+            category={workflow.category}
+            difficulty={workflow.difficulty}
+            readingTime={workflow.readingTime}
+            tools={workflow.tools}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+</main>
 
-  <Footer />
+<Footer />
+
 </BaseLayout>
+
+<style>
+  .heading {
+    max-width: 640px;
+    margin-bottom: var(--space-6);
+  }
+
+  .heading h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    margin-top: var(--space-2);
+  }
+
+  .workflows-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 900px) {
+    .workflows-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .workflows-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
