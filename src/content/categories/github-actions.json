@@ -1,0 +1,5 @@
+{
+  "slug": "github-actions",
+  "name": "GitHub Actions",
+  "description": "CI/CD pipelines and repository automation triggered directly from your GitHub workflow."
+}
