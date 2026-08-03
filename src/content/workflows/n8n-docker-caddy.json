@@ -1,0 +1,12 @@
+{
+  "slug": "n8n-docker-caddy",
+  "title": "Self-host n8n with Docker + Caddy",
+  "description": "A production n8n stack with automatic HTTPS and persistent workflow storage on a $5 VPS.",
+  "category": "n8n",
+  "difficulty": "Intermediate",
+  "readingTime": "15 min",
+  "featured": true,
+  "tags": ["n8n", "Docker", "Self-Hosted"],
+  "tools": ["n8n", "Docker", "Caddy"],
+  "cover": "/images/workflows/n8n-docker-caddy.webp"
+}
