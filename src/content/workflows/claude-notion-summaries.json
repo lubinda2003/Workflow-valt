@@ -1,0 +1,12 @@
+{
+  "slug": "claude-notion-summaries",
+  "title": "Auto-summarize meeting notes into Notion",
+  "description": "Pipe transcripts through Claude and push structured summaries straight into a Notion database.",
+  "category": "AI Agents",
+  "difficulty": "Intermediate",
+  "readingTime": "12 min",
+  "featured": true,
+  "tags": ["Claude", "Notion", "AI Agent"],
+  "tools": ["Claude", "Notion"],
+  "cover": "/images/workflows/claude-notion-summaries.webp"
+}
