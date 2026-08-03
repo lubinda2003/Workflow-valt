@@ -6,7 +6,60 @@
   "difficulty": "Intermediate",
   "readingTime": "10 min",
   "featured": true,
-  "tags": ["CI/CD", "GitHub Actions", "Cloudflare Pages"],
-  "tools": ["GitHub Actions", "Cloudflare Pages"],
-  "cover": "/images/workflows/github-actions-deploy.webp"
+  "tags": [
+    "CI/CD",
+    "GitHub Actions",
+    "Cloudflare Pages"
+  ],
+  "tools": [
+    "GitHub Actions",
+    "Cloudflare Pages"
+  ],
+  "cover": "/images/workflows/github-actions-deploy.webp",
+  "overview": "A GitHub Actions pipeline that builds, tests, and deploys a static site to Cloudflare Pages on every push to main, with zero manual steps and no downtime during the swap.",
+  "prerequisites": [
+    "A GitHub repository connected to a Cloudflare Pages project",
+    "A Cloudflare API token with Pages edit permission",
+    "A Node.js project with a working build script"
+  ],
+  "steps": [
+    {
+      "title": "Create the workflow file",
+      "content": "Add a workflow under .github/workflows that triggers on pushes to main.",
+      "code": {
+        "language": "yaml",
+        "code": "name: Deploy\n\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4"
+      }
+    },
+    {
+      "title": "Install and build",
+      "content": "Cache dependencies, install them, and run the project's build command.",
+      "code": {
+        "language": "yaml",
+        "code": "      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n          cache: npm\n      - run: npm ci\n      - run: npm run build"
+      }
+    },
+    {
+      "title": "Run tests before deploying",
+      "content": "Fail the pipeline early if tests don't pass, so a broken build never reaches production.",
+      "code": {
+        "language": "yaml",
+        "code": "      - run: npm test"
+      }
+    },
+    {
+      "title": "Deploy to Cloudflare Pages",
+      "content": "Use Cloudflare's official action to publish the build output, authenticated with a scoped API token stored as a repo secret.",
+      "code": {
+        "language": "yaml",
+        "code": "      - uses: cloudflare/pages-action@v1\n        with:\n          apiToken: ${{ secrets.CF_API_TOKEN }}\n          accountId: ${{ secrets.CF_ACCOUNT_ID }}\n          projectName: my-site\n          directory: dist"
+      }
+    },
+    {
+      "title": "Add the secrets",
+      "content": "Store the Cloudflare API token and account ID under repo Settings, then Secrets and variables, then Actions."
+    }
+  ],
+  "architecture": "A push to main triggers the workflow. GitHub-hosted runners install dependencies, build the project, and run the test suite in isolated steps that fail fast. Cloudflare Pages then receives the built directory and atomically swaps it into production, so visitors never see a half-deployed site.",
+  "result": "Every merge to main ships automatically: build, test, and deploy complete in under two minutes with no manual intervention and no downtime."
 }
