@@ -1,0 +1,12 @@
+{
+  "slug": "cloudflare-rate-limit",
+  "title": "Rate-limited API proxy at the edge",
+  "description": "Use Workers KV and Durable Objects to throttle requests before they reach your origin.",
+  "category": "Cloudflare Workers",
+  "difficulty": "Advanced",
+  "readingTime": "18 min",
+  "featured": true,
+  "tags": ["Cloudflare Workers", "Edge", "APIs"],
+  "tools": ["Cloudflare Workers", "Workers KV", "Durable Objects"],
+  "cover": "/images/workflows/cloudflare-rate-limit.webp"
+}
