@@ -1,0 +1,12 @@
+{
+  "slug": "ocr-receipts-sheets",
+  "title": "OCR receipts straight into a spreadsheet",
+  "description": "Scan receipts, extract line items with OCR, and log them to Google Sheets automatically.",
+  "category": "Data & OCR",
+  "difficulty": "Beginner",
+  "readingTime": "9 min",
+  "featured": true,
+  "tags": ["OCR", "Google Sheets", "Automation"],
+  "tools": ["OCR API", "Google Sheets"],
+  "cover": "/images/workflows/ocr-receipts-sheets.webp"
+}
