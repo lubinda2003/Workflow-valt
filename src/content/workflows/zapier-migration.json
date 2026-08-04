@@ -6,7 +6,45 @@
   "difficulty": "Beginner",
   "readingTime": "8 min",
   "featured": true,
-  "tags": ["Zapier", "n8n", "Migration"],
-  "tools": ["Zapier", "n8n", "Cloudflare Workers"],
-  "cover": "/images/workflows/zapier-migration.webp"
+  "tags": [
+    "Zapier",
+    "n8n",
+    "Migration"
+  ],
+  "tools": [
+    "Zapier",
+    "n8n",
+    "Cloudflare Workers"
+  ],
+  "cover": "/images/workflows/zapier-migration.webp",
+  "overview": "A decision framework and migration checklist for teams outgrowing Zapier's per-task pricing, covering when to move to n8n or Cloudflare Workers and how to do it without breaking live automations.",
+  "prerequisites": [
+    "An inventory of your current Zaps and their monthly task volume",
+    "Access to your Zapier billing dashboard",
+    "A target platform decided, either self-hosted n8n or custom Workers"
+  ],
+  "steps": [
+    {
+      "title": "Audit current usage",
+      "content": "Export your Zap history and identify which automations consume the most tasks. Usually a handful of high-frequency triggers account for most of the bill."
+    },
+    {
+      "title": "Decide n8n vs Workers",
+      "content": "n8n suits visual, multi-step automations your team will keep editing. Cloudflare Workers suit simple, high-volume, latency-sensitive triggers where a full workflow engine is overkill."
+    },
+    {
+      "title": "Rebuild the highest-volume Zap first",
+      "content": "Start with the single Zap consuming the most tasks. It has the best return on effort and validates the new platform before you migrate everything else."
+    },
+    {
+      "title": "Run both in parallel",
+      "content": "Keep the old Zap active but idle while the new automation runs live, so you can compare outputs for a few days before fully cutting over."
+    },
+    {
+      "title": "Cut over and monitor",
+      "content": "Disable the Zap, watch error rates on the new platform for a week, and only then move to the next automation on your list."
+    }
+  ],
+  "architecture": "The migration runs as a staged replacement: each Zap is mapped to an equivalent trigger-action pair in the new platform, tested against real traffic in parallel, and only retired once the new version has proven itself. This avoids a risky big-bang cutover.",
+  "result": "A lower, usage-based cost structure with automations you fully own and can debug, instead of black-box Zap runs billed per task."
 }
