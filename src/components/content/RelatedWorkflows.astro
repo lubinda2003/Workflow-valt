@@ -1,0 +1,77 @@
+---
+import WorkflowCard from "./WorkflowCard.astro";
+
+export interface Props {
+  workflows: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    category: string;
+    difficulty: string;
+    readingTime: string;
+    tools: string[];
+  }>;
+}
+
+const { workflows } = Astro.props;
+---
+
+{workflows.length > 0 && (
+  <section class="related">
+    <div class="container">
+      <p class="eyebrow">Related Workflows</p>
+      <h2>Keep building</h2>
+
+      <div class="grid related-grid">
+        {workflows.map((workflow) => (
+          <WorkflowCard
+            slug={workflow.slug}
+            title={workflow.title}
+            description={workflow.description}
+            category={workflow.category}
+            difficulty={workflow.difficulty}
+            readingTime={workflow.readingTime}
+            tools={workflow.tools}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .related {
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .related h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: var(--space-5);
+  }
+
+  .related-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 900px) {
+    .related-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
