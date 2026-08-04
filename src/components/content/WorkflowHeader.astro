@@ -1,0 +1,87 @@
+---
+import Badge from "./Badge.astro";
+import ToolList from "./ToolList.astro";
+
+export interface Props {
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  readingTime: string;
+  tools: string[];
+}
+
+const { title, description, category, difficulty, readingTime, tools } = Astro.props;
+---
+
+<header class="workflow-header">
+  <div class="container">
+    <a href="/workflows" class="back">&larr; All workflows</a>
+
+    <div class="meta-top">
+      <span class="category">{category}</span>
+      <div class="badges">
+        <Badge label={difficulty} tone="accent" />
+        <Badge label={`${readingTime} read`} tone="muted" />
+      </div>
+    </div>
+
+    <h1>{title}</h1>
+    <p class="description">{description}</p>
+
+    <ToolList tools={tools} />
+  </div>
+</header>
+
+<style>
+  .workflow-header {
+    padding: var(--space-6) 0 var(--space-5);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back {
+    display: inline-block;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    margin-bottom: var(--space-4);
+    transition: var(--transition);
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .meta-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .category {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .badges {
+    display: flex;
+    gap: .5rem;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    max-width: 800px;
+    margin-bottom: var(--space-3);
+  }
+
+  .description {
+    max-width: 640px;
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-4);
+  }
+</style>
