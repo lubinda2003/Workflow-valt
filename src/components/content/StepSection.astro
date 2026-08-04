@@ -1,0 +1,64 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+
+export interface Props {
+  number: number;
+  title: string;
+  content: string;
+  code?: { language: string; code: string };
+}
+
+const { number, title, content, code } = Astro.props;
+---
+
+<div class="step">
+  <div class="step-marker">{String(number).padStart(2, "0")}</div>
+  <div class="step-body">
+    <h3>{title}</h3>
+    <p>{content}</p>
+    {code && <CodeBlock language={code.language} code={code.code} />}
+  </div>
+</div>
+
+<style>
+  .step {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step:last-child {
+    border-bottom: none;
+  }
+
+  .step-marker {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: monospace;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .step-body h3 {
+    font-size: 1.1rem;
+    margin-bottom: .5rem;
+  }
+
+  .step-body p {
+    font-size: var(--fs-sm);
+  }
+</style>
