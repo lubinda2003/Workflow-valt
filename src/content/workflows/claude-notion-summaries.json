@@ -6,7 +6,52 @@
   "difficulty": "Intermediate",
   "readingTime": "12 min",
   "featured": true,
-  "tags": ["Claude", "Notion", "AI Agent"],
-  "tools": ["Claude", "Notion"],
-  "cover": "/images/workflows/claude-notion-summaries.webp"
+  "tags": [
+    "Claude",
+    "Notion",
+    "AI Agent"
+  ],
+  "tools": [
+    "Claude",
+    "Notion"
+  ],
+  "cover": "/images/workflows/claude-notion-summaries.webp",
+  "overview": "An automation that takes raw meeting transcripts, sends them to Claude for structured summarization, and writes the result directly into a Notion database as a new page.",
+  "prerequisites": [
+    "An Anthropic API key",
+    "A Notion integration token with access to the target database",
+    "A transcript source such as a Zoom or Otter.ai export"
+  ],
+  "steps": [
+    {
+      "title": "Set up the Notion integration",
+      "content": "Create an internal integration in Notion, grab its token, and share the target database with it."
+    },
+    {
+      "title": "Call Claude to summarize",
+      "content": "Send the transcript to the Messages API with a prompt that asks for a structured summary covering decisions, action items, and open questions.",
+      "code": {
+        "language": "javascript",
+        "code": "const response = await fetch('https://api.anthropic.com/v1/messages', {\n  method: 'POST',\n  headers: {\n    'x-api-key': process.env.ANTHROPIC_API_KEY,\n    'content-type': 'application/json'\n  },\n  body: JSON.stringify({\n    model: 'claude-sonnet-4-6',\n    max_tokens: 1000,\n    messages: [{\n      role: 'user',\n      content: `Summarize this transcript into decisions, action items, and open questions:\\n\\n${transcript}`\n    }]\n  })\n});"
+      }
+    },
+    {
+      "title": "Parse the summary",
+      "content": "Extract the text block from Claude's response and split it into the three sections for structured Notion properties."
+    },
+    {
+      "title": "Create the Notion page",
+      "content": "Use the Notion API to add a new page to the database with the summary content and today's date.",
+      "code": {
+        "language": "javascript",
+        "code": "await fetch('https://api.notion.com/v1/pages', {\n  method: 'POST',\n  headers: {\n    'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,\n    'Notion-Version': '2022-06-28',\n    'content-type': 'application/json'\n  },\n  body: JSON.stringify({\n    parent: { database_id: process.env.NOTION_DB_ID },\n    properties: { Name: { title: [{ text: { content: meetingTitle } }] } },\n    children: summaryBlocks\n  })\n});"
+      }
+    },
+    {
+      "title": "Trigger it automatically",
+      "content": "Wire this up behind a webhook or scheduled Worker so new transcripts are summarized the moment they land, with no manual copy-paste."
+    }
+  ],
+  "architecture": "A transcript source feeds into a small serverless function. Claude handles the language understanding step, turning unstructured text into three clean sections. The Notion API call is the only side effect, so the pipeline stays stateless and easy to retry on failure.",
+  "result": "Meeting notes appear in Notion as structured, searchable pages within seconds of a transcript being available, with no one manually writing summaries."
 }
