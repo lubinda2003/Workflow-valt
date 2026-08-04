@@ -1,0 +1,55 @@
+---
+export interface Props {
+  language?: string;
+  code: string;
+}
+
+const { language = "text", code } = Astro.props;
+---
+
+<div class="code-block">
+  <div class="code-block-header">
+    <span class="language">{language}</span>
+  </div>
+  <pre><code>{code}</code></pre>
+</div>
+
+<style>
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin: var(--space-3) 0;
+  }
+
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    padding: .5rem var(--space-3);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .language {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+  }
+
+  pre {
+    margin: 0;
+    padding: var(--space-3);
+    overflow-x: auto;
+  }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    line-height: 1.6;
+    white-space: pre;
+  }
+</style>
