@@ -6,7 +6,52 @@
   "difficulty": "Beginner",
   "readingTime": "9 min",
   "featured": true,
-  "tags": ["OCR", "Google Sheets", "Automation"],
-  "tools": ["OCR API", "Google Sheets"],
-  "cover": "/images/workflows/ocr-receipts-sheets.webp"
+  "tags": [
+    "OCR",
+    "Google Sheets",
+    "Automation"
+  ],
+  "tools": [
+    "OCR API",
+    "Google Sheets"
+  ],
+  "cover": "/images/workflows/ocr-receipts-sheets.webp",
+  "overview": "A pipeline that scans photographed receipts, extracts line items and totals with OCR, and appends the structured data to a Google Sheet automatically.",
+  "prerequisites": [
+    "A Google Cloud project with the Sheets API enabled",
+    "An OCR provider API key, such as Google Vision or a dedicated receipt-OCR API",
+    "A service account with edit access to the target spreadsheet"
+  ],
+  "steps": [
+    {
+      "title": "Capture the receipt",
+      "content": "Upload a photo through a simple form or a mobile shortcut that posts the image to your automation's ingest endpoint."
+    },
+    {
+      "title": "Run OCR extraction",
+      "content": "Send the image to the OCR provider and request structured fields rather than raw text where the API supports it.",
+      "code": {
+        "language": "javascript",
+        "code": "const result = await ocrClient.extractReceipt(imageBuffer);\n// result: { merchant, date, items: [{ name, price }], total }"
+      }
+    },
+    {
+      "title": "Normalize the data",
+      "content": "Clean up currency formatting and merge near-duplicate line items before writing anything to the sheet."
+    },
+    {
+      "title": "Append to Google Sheets",
+      "content": "Use the Sheets API to append one row per line item, tagged with the receipt's merchant and date.",
+      "code": {
+        "language": "javascript",
+        "code": "await sheets.spreadsheets.values.append({\n  spreadsheetId,\n  range: 'Receipts!A:D',\n  valueInputOption: 'USER_ENTERED',\n  requestBody: {\n    values: result.items.map(i => [result.date, result.merchant, i.name, i.price])\n  }\n});"
+      }
+    },
+    {
+      "title": "Flag low-confidence scans",
+      "content": "If the OCR provider returns a confidence score below your threshold, route the receipt to a manual review queue instead of writing bad data into the sheet."
+    }
+  ],
+  "architecture": "Images flow through a single ingest endpoint into the OCR provider, then through a normalization step before touching the spreadsheet. Keeping normalization separate from extraction makes it easy to swap OCR providers later without changing how data lands in Sheets.",
+  "result": "Receipts logged as clean, itemized rows in Google Sheets within seconds of being photographed, with no manual data entry."
 }
