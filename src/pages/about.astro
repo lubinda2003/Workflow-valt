@@ -1,0 +1,62 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import Stats from "../components/sections/Stats.astro";
+import Features from "../components/sections/Features.astro";
+---
+
+<BaseLayout
+  title="About — Workflow Vault"
+  description="Workflow Vault is a library of production-ready AI automation guides for developers, indie hackers, and agencies."
+>
+
+<Header />
+
+<main>
+  <section class="about-intro">
+    <div class="container">
+      <p class="eyebrow">About Workflow Vault</p>
+      <h1>Automation guides built to actually ship</h1>
+      <p class="subtitle">
+        Workflow Vault is a library of production-ready automation workflows for developers, indie hackers,
+        agencies, and freelancers. Every guide includes the exact steps, the architecture, and the source
+        code, not just a demo.
+      </p>
+    </div>
+  </section>
+
+  <Stats />
+
+  <Features />
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<style>
+  .about-intro {
+    padding: var(--space-6) 0 var(--space-5);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    max-width: 760px;
+    margin-bottom: var(--space-3);
+  }
+
+  .subtitle {
+    max-width: 640px;
+    font-size: var(--fs-md);
+  }
+</style>
