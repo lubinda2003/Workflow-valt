@@ -1,4 +1,6 @@
 ---
+const currentPath = Astro.url.pathname;
+
 const links = [
   { name: "Home", href: "/" },
   { name: "Workflows", href: "/workflows" },
@@ -6,6 +8,11 @@ const links = [
   { name: "Resources", href: "/resources" },
   { name: "About", href: "/about" }
 ];
+
+function isActive(href) {
+  if (href === "/") return currentPath === "/";
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
 ---
 
 <header class="header">
@@ -15,20 +22,49 @@ const links = [
       Workflow<span>Vault</span>
     </a>
 
-    <nav>
+    <nav class="nav-links" id="nav-links">
       {
         links.map(link => (
-          <a href={link.href}>{link.name}</a>
+          <a href={link.href} class={isActive(link.href) ? "active" : ""}>
+            {link.name}
+          </a>
         ))
       }
     </nav>
 
-    <a href="/workflows" class="button">
-      Explore
-    </a>
+    <div class="nav-actions">
+      <a href="/workflows" class="button">
+        Explore
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
 
   </div>
 </header>
+
+<script>
+  const toggle = document.getElementById("nav-toggle");
+  const navLinks = document.getElementById("nav-links");
+
+  toggle?.addEventListener("click", () => {
+    const isOpen = navLinks?.classList.toggle("open");
+    toggle.classList.toggle("open", isOpen);
+    toggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
+  });
+
+  navLinks?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      toggle?.classList.remove("open");
+      toggle?.setAttribute("aria-expanded", "false");
+    });
+  });
+</script>
 
 <style>
 .header{
@@ -60,24 +96,118 @@ const links = [
   color:var(--accent);
 }
 
-nav{
+.nav-links{
   display:flex;
   gap:2rem;
 }
 
-nav a{
+.nav-links a{
   color:var(--text-muted);
+  transition:.25s;
+  position:relative;
+  padding-bottom:4px;
+}
+
+.nav-links a:hover{
+  color:white;
+}
+
+.nav-links a.active{
+  color:var(--text);
+}
+
+.nav-links a.active::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-4px;
+  height:2px;
+  background:var(--accent);
+  border-radius:2px;
+}
+
+.nav-actions{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.nav-toggle{
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+
+  width:36px;
+  height:36px;
+
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:8px;
+
+  cursor:pointer;
+}
+
+.nav-toggle span{
+  display:block;
+  width:16px;
+  height:2px;
+  margin:0 auto;
+  background:var(--text);
   transition:.25s;
 }
 
-nav a:hover{
-  color:white;
+.nav-toggle.open span:nth-child(1){
+  transform:translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.open span:nth-child(2){
+  opacity:0;
+}
+
+.nav-toggle.open span:nth-child(3){
+  transform:translateY(-7px) rotate(-45deg);
 }
 
 @media(max-width:768px){
 
-  nav{
+  .nav-links{
+    position:absolute;
+    top:78px;
+    left:0;
+    right:0;
+
+    flex-direction:column;
+    gap:0;
+
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .3s ease;
+  }
+
+  .nav-links.open{
+    max-height:400px;
+  }
+
+  .nav-links a{
+    padding:1rem var(--space-4);
+    border-bottom:1px solid var(--border);
+  }
+
+  .nav-links a.active::after{
     display:none;
+  }
+
+  .nav-links a.active{
+    color:var(--accent);
+  }
+
+  .nav-toggle{
+    display:flex;
   }
 
   .button{
