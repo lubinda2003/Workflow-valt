@@ -1,9 +1,9 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Header from "../components/layout/Header.astro";
-import Footer from "../components/layout/Footer.astro";
-import WorkflowCard from "../components/content/WorkflowCard.astro";
-import { getAllWorkflows } from "../lib/workflows.js";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/layout/Header.astro";
+import Footer from "../../components/layout/Footer.astro";
+import WorkflowCard from "../../components/content/WorkflowCard.astro";
+import { getAllWorkflows } from "../../lib/workflows.js";
 
 const workflows = await getAllWorkflows();
 ---
