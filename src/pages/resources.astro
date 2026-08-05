@@ -1,0 +1,57 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+---
+
+<BaseLayout
+  title="Resources — Workflow Vault"
+  description="Templates, downloads, and reference material for Workflow Vault guides. Coming soon."
+>
+
+<Header />
+
+<main>
+  <section class="resources-placeholder">
+    <div class="container">
+      <p class="eyebrow">Resources</p>
+      <h1>Templates and downloads, coming soon</h1>
+      <p class="subtitle">
+        This is where you'll find n8n workflow exports, Worker boilerplates, and other downloadable
+        assets that pair with the guides. It's not live yet, check back soon.
+      </p>
+      <a href="/workflows" class="button">Browse workflows instead</a>
+    </div>
+  </section>
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<style>
+  .resources-placeholder {
+    padding: var(--space-6) 0;
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    max-width: 700px;
+    margin-bottom: var(--space-3);
+  }
+
+  .subtitle {
+    max-width: 560px;
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-4);
+  }
+</style>
