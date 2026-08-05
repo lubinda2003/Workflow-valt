@@ -13,6 +13,8 @@ const categories = [
 function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
+
+const preview = categories.slice(0, 4);
 ---
 
 <section class="categories">
@@ -23,13 +25,15 @@ function slugify(name) {
     </div>
 
     <div class="grid categories-grid">
-      {categories.map((c) => (
+      {preview.map((c) => (
         <a href={`/categories/${slugify(c.name)}`} class="card category-card">
           <h3>{c.name}</h3>
           <p>{c.tools}</p>
         </a>
       ))}
     </div>
+
+    <a href="/categories" class="view-all">View all categories &rarr;</a>
   </div>
 </section>
 
@@ -63,6 +67,14 @@ function slugify(name) {
 
   .category-card p {
     font-size: var(--fs-xs);
+  }
+
+  .view-all {
+    display: inline-block;
+    margin-top: var(--space-4);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
   }
 
   @media (max-width: 900px) {
