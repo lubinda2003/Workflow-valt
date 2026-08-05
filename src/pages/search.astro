@@ -1,0 +1,315 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import WorkflowCard from "../components/content/WorkflowCard.astro";
+import { getAllWorkflows } from "../lib/workflows.js";
+import { getAllCategories } from "../lib/categories.js";
+import { DIFFICULTY_LEVELS } from "../data/difficultyLevels.js";
+
+const workflows = await getAllWorkflows();
+
+const categories = (await getAllCategories()).sort((a, b) =>
+  a.name.localeCompare(b.name)
+);
+
+const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
+  a.localeCompare(b)
+);
+---
+
+<BaseLayout
+  title="Search — Workflow Vault"
+  description="Search and filter every workflow guide by category, difficulty, or tool."
+>
+
+<Header />
+
+<main>
+  <section class="search-hero">
+    <div class="container">
+      <p class="eyebrow">Search</p>
+      <h1>Find the right workflow</h1>
+      <p class="subtitle">Search and filter every guide in the vault by category, difficulty, or tool.</p>
+
+      <div class="search-bar">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search workflows..."
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="filters">
+    <div class="container">
+      <div class="filter-group">
+        <p class="filter-label">Category</p>
+        <div class="filter-chips">
+          <button class="filter-chip filter-category active" data-value="all">All</button>
+          {categories.map((category) => (
+            <button class="filter-chip filter-category" data-value={category.name}>
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <p class="filter-label">Difficulty</p>
+        <div class="filter-chips">
+          <button class="filter-chip filter-difficulty active" data-value="all">All</button>
+          {DIFFICULTY_LEVELS.map((level) => (
+            <button class="filter-chip filter-difficulty" data-value={level}>
+              {level}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <p class="filter-label">Tool</p>
+        <div class="filter-chips">
+          <button class="filter-chip filter-tool active" data-value="all">All</button>
+          {tools.map((tool) => (
+            <button class="filter-chip filter-tool" data-value={tool}>
+              {tool}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="results">
+    <div class="container">
+      <p class="results-count" id="results-count">{workflows.length} workflows</p>
+
+      <div class="grid results-grid" id="results-grid">
+        {workflows.map((workflow) => (
+          <div
+            class="result-item"
+            data-title={workflow.title.toLowerCase()}
+            data-description={workflow.description.toLowerCase()}
+            data-category={workflow.category}
+            data-difficulty={workflow.difficulty}
+            data-tools={workflow.tools.join(",")}
+          >
+            <WorkflowCard
+              slug={workflow.slug}
+              title={workflow.title}
+              description={workflow.description}
+              category={workflow.category}
+              difficulty={workflow.difficulty}
+              readingTime={workflow.readingTime}
+              tools={workflow.tools}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div class="empty-state" id="empty-state">
+        <p>No workflows match your filters.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<script>
+  const searchInput = document.getElementById("search-input");
+  const items = document.querySelectorAll(".result-item");
+  const resultsCount = document.getElementById("results-count");
+  const emptyState = document.getElementById("empty-state");
+
+  const state = { search: "", category: "all", difficulty: "all", tool: "all" };
+
+  function applyFilters() {
+    let visible = 0;
+
+    items.forEach((item) => {
+      const matches =
+        (!state.search ||
+          item.dataset.title.includes(state.search) ||
+          item.dataset.description.includes(state.search)) &&
+        (state.category === "all" || item.dataset.category === state.category) &&
+        (state.difficulty === "all" || item.dataset.difficulty === state.difficulty) &&
+        (state.tool === "all" || item.dataset.tools.split(",").includes(state.tool));
+
+      item.style.display = matches ? "" : "none";
+      if (matches) visible++;
+    });
+
+    if (resultsCount) {
+      resultsCount.textContent = `${visible} workflow${visible === 1 ? "" : "s"}`;
+    }
+    if (emptyState) {
+      emptyState.style.display = visible === 0 ? "flex" : "none";
+    }
+  }
+
+  searchInput?.addEventListener("input", (event) => {
+    state.search = event.target.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  function wireGroup(selector, key) {
+    const buttons = document.querySelectorAll(selector);
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        state[key] = btn.dataset.value;
+        applyFilters();
+      });
+    });
+  }
+
+  wireGroup(".filter-category", "category");
+  wireGroup(".filter-difficulty", "difficulty");
+  wireGroup(".filter-tool", "tool");
+
+  applyFilters();
+</script>
+
+<style>
+  .search-hero {
+    padding: var(--space-6) 0 var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .15em;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .search-hero h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: var(--space-2);
+  }
+
+  .subtitle {
+    max-width: 600px;
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-4);
+  }
+
+  .search-bar input {
+    width: 100%;
+    max-width: 480px;
+    padding: .9rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-family: inherit;
+  }
+
+  .search-bar input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .filters {
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-group {
+    margin-bottom: var(--space-3);
+  }
+
+  .filter-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .filter-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .6rem;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .filter-chip {
+    padding: .5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .filter-chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .results {
+    padding: var(--space-5) 0;
+  }
+
+  .results-count {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .results-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .empty-state {
+    display: none;
+    justify-content: center;
+    padding: var(--space-6) 0;
+    color: var(--text-muted);
+    font-size: var(--fs-md);
+  }
+
+  @media (max-width: 900px) {
+    .results-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .search-bar input {
+      max-width: 100%;
+    }
+  }
+</style>
