@@ -6,6 +6,7 @@ import Footer from "../../components/layout/Footer.astro";
 import WorkflowHeader from "../../components/content/WorkflowHeader.astro";
 import StepSection from "../../components/content/StepSection.astro";
 import RelatedWorkflows from "../../components/content/RelatedWorkflows.astro";
+import TableOfContents from "../../components/content/TableOfContents.astro";
 import { getWorkflowsByCategorySlug } from "../../lib/workflows.js";
 import { slugify } from "../../lib/slugify.js";
 
@@ -23,6 +24,14 @@ const { workflow } = Astro.props;
 const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
   .filter((w) => w.slug !== workflow.slug)
   .slice(0, 3);
+
+const tocItems = [
+  { id: "overview", label: "Overview" },
+  { id: "prerequisites", label: "Prerequisites" },
+  { id: "steps", label: "Step-by-Step" },
+  { id: "architecture", label: "Architecture" },
+  { id: "result", label: "Final Result" },
+];
 ---
 
 <BaseLayout
@@ -45,19 +54,23 @@ const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
   <section class="guide">
     <div class="container guide-layout">
       <article>
-        <div class="guide-section">
+        <div class="toc-mobile-slot">
+          <TableOfContents items={tocItems} />
+        </div>
+
+        <div class="guide-section" id="overview">
           <h2>Overview</h2>
           <p>{workflow.overview}</p>
         </div>
 
-        <div class="guide-section">
+        <div class="guide-section" id="prerequisites">
           <h2>Prerequisites</h2>
           <ul class="prereq-list">
             {workflow.prerequisites.map((item) => <li>{item}</li>)}
           </ul>
         </div>
 
-        <div class="guide-section">
+        <div class="guide-section" id="steps">
           <h2>Step-by-step implementation</h2>
           <div class="steps">
             {workflow.steps.map((step, index) => (
@@ -71,16 +84,20 @@ const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
           </div>
         </div>
 
-        <div class="guide-section">
+        <div class="guide-section" id="architecture">
           <h2>Workflow architecture</h2>
           <p>{workflow.architecture}</p>
         </div>
 
-        <div class="guide-section">
+        <div class="guide-section" id="result">
           <h2>Final result</h2>
           <p>{workflow.result}</p>
         </div>
       </article>
+
+      <div class="toc-sidebar-slot">
+        <TableOfContents items={tocItems} />
+      </div>
     </div>
   </section>
 
@@ -96,8 +113,15 @@ const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
     padding: var(--space-6) 0;
   }
 
-  .guide-layout article {
-    max-width: 760px;
+  .guide-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 760px) 220px;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .toc-mobile-slot :global(.toc-desktop) {
+    display: none;
   }
 
   .guide-section {
@@ -124,5 +148,15 @@ const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
 
   .steps {
     border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .guide-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .toc-sidebar-slot {
+      display: none;
+    }
   }
 </style>
