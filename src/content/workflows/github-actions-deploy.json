@@ -61,5 +61,27 @@
     }
   ],
   "architecture": "A push to main triggers the workflow. GitHub-hosted runners install dependencies, build the project, and run the test suite in isolated steps that fail fast. Cloudflare Pages then receives the built directory and atomically swaps it into production, so visitors never see a half-deployed site.",
-  "result": "Every merge to main ships automatically: build, test, and deploy complete in under two minutes with no manual intervention and no downtime."
+  "result": "Every merge to main ships automatically: build, test, and deploy complete in under two minutes with no manual intervention and no downtime.",
+  "troubleshooting": [
+    {
+      "issue": "Deploy step fails with 'Authentication error'",
+      "cause": "The CF_API_TOKEN secret is missing, expired, or scoped to the wrong account.",
+      "fix": "Generate a new Cloudflare API token with Pages edit permission and update the repository secret."
+    },
+    {
+      "issue": "Build succeeds locally but fails in CI",
+      "cause": "package-lock.json is out of sync with package.json, and npm ci enforces an exact match between them.",
+      "fix": "Run npm install locally to refresh the lockfile, commit it, and push again."
+    },
+    {
+      "issue": "The deploy step runs but the live site doesn't update",
+      "cause": "The 'directory' input points at the wrong build output folder.",
+      "fix": "Confirm your build command's output folder (for example dist) matches the directory value in the pages-action step."
+    }
+  ],
+  "nextSteps": [
+    "Add a preview deployment step for pull requests before merging to main.",
+    "Cache node_modules between runs to speed up the pipeline.",
+    "Add a Slack notification step that posts on deploy success or failure."
+  ]
 }
