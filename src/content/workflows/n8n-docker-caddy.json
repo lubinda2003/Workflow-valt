@@ -71,5 +71,27 @@
     }
   ],
   "architecture": "Traffic reaches Caddy on ports 80/443, which terminates TLS and proxies requests to n8n over the internal Docker network on port 5678. n8n's SQLite database and encryption key live in a bind-mounted volume, so the container can be recreated without losing workflows or credentials.",
-  "result": "A production n8n instance reachable at https://n8n.example.com with a valid, auto-renewing certificate, and workflow data that survives container updates and VPS reboots."
+  "result": "A production n8n instance reachable at https://n8n.example.com with a valid, auto-renewing certificate, and workflow data that survives container updates and VPS reboots.",
+  "troubleshooting": [
+    {
+      "issue": "n8n shows a 502 Bad Gateway right after deploying",
+      "cause": "Caddy started before n8n finished booting, so the reverse proxy target wasn't ready yet.",
+      "fix": "Restart just the Caddy service with `docker compose restart caddy` once n8n's logs show it's listening on port 5678."
+    },
+    {
+      "issue": "Webhook URLs return 404 from external services",
+      "cause": "The WEBHOOK_URL environment variable still points at localhost instead of the public domain.",
+      "fix": "Set WEBHOOK_URL=https://n8n.example.com/ in the Compose file and recreate the container."
+    },
+    {
+      "issue": "Certificate never issues, Caddy logs show 'connection refused' on port 80",
+      "cause": "The VPS firewall or a cloud provider security group is blocking inbound traffic on port 80 or 443.",
+      "fix": "Open ports 80 and 443 in your provider's firewall rules, then restart Caddy."
+    }
+  ],
+  "nextSteps": [
+    "Add a scheduled backup of the n8n_data volume to object storage.",
+    "Put n8n behind Cloudflare Access or Caddy basic auth for an extra login layer.",
+    "Wire up a Slack or email node so workflow failures notify you automatically."
+  ]
 }
