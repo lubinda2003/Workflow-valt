@@ -31,6 +31,16 @@ const workflows = defineCollection({
     ),
     architecture: z.string(),
     result: z.string(),
+    troubleshooting: z
+      .array(
+        z.object({
+          issue: z.string(),
+          cause: z.string(),
+          fix: z.string(),
+        })
+      )
+      .default([]),
+    nextSteps: z.array(z.string()).default([]),
   }),
 });
 
