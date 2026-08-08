@@ -10,9 +10,44 @@ const { language = "text", code } = Astro.props;
 <div class="code-block">
   <div class="code-block-header">
     <span class="language">{language}</span>
+    <button type="button" class="copy-button" aria-label="Copy code to clipboard">
+      <span class="copy-label">Copy</span>
+    </button>
   </div>
   <pre><code>{code}</code></pre>
 </div>
+
+<script>
+  if (!window.__wvCopyInit) {
+    window.__wvCopyInit = true;
+
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest(".copy-button");
+      if (!button) return;
+
+      const block = button.closest(".code-block");
+      const codeEl = block ? block.querySelector("pre code") : null;
+      if (!codeEl) return;
+
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent || "");
+
+        const label = button.querySelector(".copy-label");
+        const original = label.textContent;
+        button.classList.add("copied");
+        label.textContent = "Copied!";
+
+        window.clearTimeout(button._copyTimeout);
+        button._copyTimeout = window.setTimeout(() => {
+          button.classList.remove("copied");
+          label.textContent = original;
+        }, 1800);
+      } catch (err) {
+        // Clipboard API unavailable or blocked; fail silently.
+      }
+    });
+  }
+</script>
 
 <style>
   .code-block {
@@ -26,6 +61,7 @@ const { language = "text", code } = Astro.props;
   .code-block-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: .5rem var(--space-3);
     border-bottom: 1px solid var(--border);
     background: var(--surface-2);
@@ -37,6 +73,31 @@ const { language = "text", code } = Astro.props;
     text-transform: uppercase;
     letter-spacing: .06em;
     font-weight: 700;
+  }
+
+  .copy-button {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .6rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .copy-button:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .copy-button.copied {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   pre {
