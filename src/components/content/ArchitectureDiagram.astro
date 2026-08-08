@@ -1,0 +1,86 @@
+---
+export interface Props {
+  tools: string[];
+}
+
+const { tools } = Astro.props;
+---
+
+<div
+  class="architecture-diagram"
+  role="img"
+  aria-label={`Workflow architecture: ${tools.join(" connects to ")}`}
+>
+  {tools.map((tool, index) => (
+    <Fragment>
+      <div class="diagram-node">
+        <span class="node-dot"></span>
+        <span class="node-label">{tool}</span>
+      </div>
+      {index < tools.length - 1 && (
+        <span class="diagram-arrow" aria-hidden="true">&rarr;</span>
+      )}
+    </Fragment>
+  ))}
+</div>
+
+<style>
+  .architecture-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: var(--space-3) 0;
+  }
+
+  .diagram-node {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .node-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .node-label {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .diagram-arrow {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    .architecture-diagram {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .diagram-node {
+      justify-content: center;
+    }
+
+    .diagram-arrow {
+      text-align: center;
+      transform: rotate(90deg);
+    }
+  }
+</style>
