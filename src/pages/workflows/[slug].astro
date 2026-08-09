@@ -120,6 +120,10 @@ const tocItems = [
     align-items: start;
   }
 
+  .guide-layout > article {
+    min-width: 0;
+  }
+
   .toc-mobile-slot :global(.toc-desktop) {
     display: none;
   }
@@ -152,7 +156,7 @@ const tocItems = [
 
   @media (max-width: 900px) {
     .guide-layout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .toc-sidebar-slot {
