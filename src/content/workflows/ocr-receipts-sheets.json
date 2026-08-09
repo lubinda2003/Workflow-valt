@@ -53,5 +53,27 @@
     }
   ],
   "architecture": "Images flow through a single ingest endpoint into the OCR provider, then through a normalization step before touching the spreadsheet. Keeping normalization separate from extraction makes it easy to swap OCR providers later without changing how data lands in Sheets.",
-  "result": "Receipts logged as clean, itemized rows in Google Sheets within seconds of being photographed, with no manual data entry."
+  "result": "Receipts logged as clean, itemized rows in Google Sheets within seconds of being photographed, with no manual data entry.",
+  "troubleshooting": [
+    {
+      "issue": "OCR returns garbled or empty text",
+      "cause": "The photo is low-resolution, poorly lit, or the receipt was captured at a steep angle.",
+      "fix": "Add basic image preprocessing such as cropping and deskewing before sending to the OCR provider, or prompt the user to retake the photo."
+    },
+    {
+      "issue": "Sheets API call fails with a 403",
+      "cause": "The service account was never given edit access to the specific spreadsheet.",
+      "fix": "Share the spreadsheet with the service account's email address as an Editor."
+    },
+    {
+      "issue": "Line item totals don't match the receipt total",
+      "cause": "OCR occasionally splits one line item into two separate rows.",
+      "fix": "Add a validation step that sums extracted line items and flags the receipt for manual review if it doesn't match the extracted total."
+    }
+  ],
+  "nextSteps": [
+    "Add category tagging, such as meals, travel, or supplies, to each logged expense.",
+    "Send a weekly summary email of logged spend.",
+    "Support multi-currency receipts with automatic conversion."
+  ]
 }
