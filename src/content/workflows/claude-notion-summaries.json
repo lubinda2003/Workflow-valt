@@ -53,5 +53,27 @@
     }
   ],
   "architecture": "A transcript source feeds into a small serverless function. Claude handles the language understanding step, turning unstructured text into three clean sections. The Notion API call is the only side effect, so the pipeline stays stateless and easy to retry on failure.",
-  "result": "Meeting notes appear in Notion as structured, searchable pages within seconds of a transcript being available, with no one manually writing summaries."
+  "result": "Meeting notes appear in Notion as structured, searchable pages within seconds of a transcript being available, with no one manually writing summaries.",
+  "troubleshooting": [
+    {
+      "issue": "Claude API call returns a 401",
+      "cause": "ANTHROPIC_API_KEY is missing from the environment, or wasn't loaded before the request fired.",
+      "fix": "Confirm the key is set in your deployment's environment variables and restart the process."
+    },
+    {
+      "issue": "Notion page creation fails with 'Could not find database'",
+      "cause": "The integration hasn't been explicitly shared with the target database inside Notion.",
+      "fix": "Open the database in Notion, click Share, and add your integration by name."
+    },
+    {
+      "issue": "Summary text arrives truncated",
+      "cause": "max_tokens is set too low for longer transcripts.",
+      "fix": "Increase max_tokens in the API request, or chunk very long transcripts before summarizing."
+    }
+  ],
+  "nextSteps": [
+    "Store the raw transcript alongside the summary for auditing.",
+    "Add retry logic with backoff for transient API errors.",
+    "Let users tag action items with an owner directly from the summary."
+  ]
 }
