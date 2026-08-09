@@ -66,5 +66,27 @@
     }
   ],
   "architecture": "Each client is mapped to a single Durable Object instance by IP or API key, giving strictly consistent, race-free counting even under concurrent requests at the edge, something KV alone can't guarantee due to eventual consistency. The Worker checks the limiter before proxying to origin, so blocked requests never leave Cloudflare's network.",
-  "result": "An edge-deployed proxy that enforces a 60-requests-per-minute limit per client with sub-millisecond overhead, protecting the origin from abuse without adding a centralized rate-limiting service."
+  "result": "An edge-deployed proxy that enforces a 60-requests-per-minute limit per client with sub-millisecond overhead, protecting the origin from abuse without adding a centralized rate-limiting service.",
+  "troubleshooting": [
+    {
+      "issue": "Every request gets rate-limited immediately",
+      "cause": "CF-Connecting-IP is missing in local testing, so all requests share the same empty-string Durable Object ID.",
+      "fix": "Test through a real Cloudflare-proxied request, or key the Durable Object off a header you control locally instead."
+    },
+    {
+      "issue": "wrangler deploy fails with 'Durable Object migration required'",
+      "cause": "New Durable Object classes need an explicit migration entry in wrangler.toml before Cloudflare will provision them.",
+      "fix": "Add a [[migrations]] block with a tag and new_classes listing RateLimiter."
+    },
+    {
+      "issue": "Rate limits reset unexpectedly right after a deploy",
+      "cause": "Durable Object instances can be recreated on deploy, which clears their in-memory request array.",
+      "fix": "Persist counters to the Durable Object's storage API instead of relying only on the in-memory array."
+    }
+  ],
+  "nextSteps": [
+    "Persist request counts to Durable Object storage so limits survive restarts.",
+    "Add a response header showing remaining quota to help API consumers.",
+    "Make the limit and window configurable via environment variables."
+  ]
 }
