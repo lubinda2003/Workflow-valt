@@ -46,5 +46,21 @@
     }
   ],
   "architecture": "The migration runs as a staged replacement: each Zap is mapped to an equivalent trigger-action pair in the new platform, tested against real traffic in parallel, and only retired once the new version has proven itself. This avoids a risky big-bang cutover.",
-  "result": "A lower, usage-based cost structure with automations you fully own and can debug, instead of black-box Zap runs billed per task."
+  "result": "A lower, usage-based cost structure with automations you fully own and can debug, instead of black-box Zap runs billed per task.",
+  "troubleshooting": [
+    {
+      "issue": "The migrated workflow behaves differently than the original Zap",
+      "cause": "Zapier's built-in formatting steps, like date parsing, don't have an exact equivalent in n8n or Workers.",
+      "fix": "Replicate the formatting logic explicitly with a Function or Set node instead of assuming automatic parity."
+    },
+    {
+      "issue": "Duplicate records appear right after cutover",
+      "cause": "The old Zap and the new automation were both live at the same time and processed the same trigger.",
+      "fix": "Fully disable the old Zap's trigger before enabling the new automation, not just afterward."
+    }
+  ],
+  "nextSteps": [
+    "Document each migrated automation's trigger and expected output for the next person.",
+    "Set up monitoring and alerting on the new platform before decommissioning Zapier entirely."
+  ]
 }
