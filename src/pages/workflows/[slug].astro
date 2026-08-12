@@ -7,6 +7,7 @@ import WorkflowHeader from "../../components/content/WorkflowHeader.astro";
 import StepSection from "../../components/content/StepSection.astro";
 import RelatedWorkflows from "../../components/content/RelatedWorkflows.astro";
 import TableOfContents from "../../components/content/TableOfContents.astro";
+import ArchitectureDiagram from "../../components/content/ArchitectureDiagram.astro";
 import { getWorkflowsByCategorySlug } from "../../lib/workflows.js";
 import { slugify } from "../../lib/slugify.js";
 
@@ -31,6 +32,9 @@ const tocItems = [
   { id: "steps", label: "Step-by-Step" },
   { id: "architecture", label: "Architecture" },
   { id: "result", label: "Final Result" },
+  ...(workflow.troubleshooting.length > 0
+    ? [{ id: "troubleshooting", label: "Troubleshooting" }]
+    : []),
 ];
 ---
 
@@ -87,12 +91,39 @@ const tocItems = [
         <div class="guide-section" id="architecture">
           <h2>Workflow architecture</h2>
           <p>{workflow.architecture}</p>
+          <ArchitectureDiagram tools={workflow.tools} />
         </div>
 
         <div class="guide-section" id="result">
           <h2>Final result</h2>
           <p>{workflow.result}</p>
+
+          {workflow.nextSteps.length > 0 && (
+            <div class="next-steps">
+              <p class="next-steps-label">Possible Next Steps</p>
+              <ul class="next-steps-list">
+                {workflow.nextSteps.map((step) => <li>{step}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
+
+        {workflow.troubleshooting.length > 0 && (
+          <div class="guide-section" id="troubleshooting">
+            <h2>Troubleshooting</h2>
+            <div class="troubleshooting-list">
+              {workflow.troubleshooting.map((item) => (
+                <details class="trouble-item">
+                  <summary>{item.issue}</summary>
+                  <div class="trouble-body">
+                    <p><span class="trouble-label">Cause</span>{item.cause}</p>
+                    <p><span class="trouble-label">Fix</span>{item.fix}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
       </article>
 
       <div class="toc-sidebar-slot">
@@ -138,20 +169,133 @@ const tocItems = [
   }
 
   .prereq-list {
+    list-style: none;
     display: flex;
     flex-direction: column;
     gap: .6rem;
-    padding-left: 1.25rem;
+    padding-left: 0;
     color: var(--text-muted);
     font-size: var(--fs-sm);
   }
 
   .prereq-list li {
-    list-style: disc;
+    position: relative;
+    padding-left: 1.6rem;
+  }
+
+  .prereq-list li::before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.15rem;
+    height: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(255, 107, 0, .12);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
   }
 
   .steps {
     border-top: 1px solid var(--border);
+  }
+
+  .next-steps {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .next-steps-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: var(--space-2);
+  }
+
+  .next-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .next-steps-list li {
+    position: relative;
+    padding-left: 1.25rem;
+  }
+
+  .next-steps-list li::before {
+    content: "\2192";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .troubleshooting-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  .trouble-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .trouble-item summary {
+    cursor: pointer;
+    padding: 1rem var(--space-3);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    list-style: none;
+  }
+
+  .trouble-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .trouble-item summary::before {
+    content: "+";
+    margin-right: .6rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .trouble-item[open] summary::before {
+    content: "\2013";
+  }
+
+  .trouble-body {
+    padding: 0 var(--space-3) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .trouble-body p {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .trouble-label {
+    display: inline-block;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--accent);
+    margin-right: .4rem;
   }
 
   @media (max-width: 900px) {
