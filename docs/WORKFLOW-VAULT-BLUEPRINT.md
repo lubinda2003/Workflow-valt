@@ -455,3 +455,37 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 > This blueprint must be updated whenever a major phase is completed, an architectural decision changes, a significant feature is added, a known issue is resolved, or the project's next priorities materially change.
 
 It is intended to function as Workflow Vault's long-term memory across conversations and, if necessary, across different Claude accounts.
+
+---
+
+## 22. Phase 8 Progress Log
+
+### Checkpoint 1 — Audit Only (Guide 1: n8n-docker-caddy)
+
+**Status:** Phase 8 has started. Working in small checkpoints per project owner's instruction. No implementation changes made in this checkpoint — audit only.
+
+**Files inspected (fresh, direct from repository):**
+- `src/content/workflows/n8n-docker-caddy.json`
+- `src/content.config.ts`
+- `src/pages/workflows/[slug].astro`
+
+All three confirmed unchanged since Phase 7.
+
+**Beginner-friendliness audit findings for `n8n-docker-caddy`:**
+
+1. **n8n itself is never explained.** The guide assumes the reader already knows what n8n is and does. A true beginner reading the title wouldn't know it's a workflow-automation tool.
+2. **VPS is never defined** — no explanation of what a VPS is, where to get one, or what happens on first login (root password, provider dashboard).
+3. **Domain/DNS is a likely blocker.** The prerequisite says "a domain pointed at the VPS's IP address" with zero explanation of what an A record is, how to set one at a registrar, or that DNS propagation takes time.
+4. **SSH is mentioned but never demonstrated.** Step 1 says "SSH into a fresh Ubuntu VPS" but provides no actual SSH command (e.g. `ssh root@your-server-ip`), no mention of an SSH client, and no Windows vs. Mac guidance.
+5. **Prerequisite/Step contradiction:** Prerequisites list "Docker and Compose plugin installed" as something the reader must already have, but Step 1 explicitly installs Docker. This is confusing and needs reconciling.
+6. **No file-editing instructions anywhere.** Steps 3 and 4 require creating `docker-compose.yml` and a `Caddyfile` on a remote server, but never mention a text editor (e.g. `nano`) or how to actually create the file.
+7. **Placeholder domain used without a callout.** `n8n.example.com` appears throughout the config and result text with no explicit "replace this with your own domain" instruction.
+8. **No success checkpoint after the most important step.** "Launch the stack" ends with `docker compose up -d` and no instruction to visit the site in a browser, no mention of what n8n's first-run owner-account setup screen looks like, and no basic verification command (e.g. `docker compose ps` or checking logs).
+9. **"Verify persistence" step has no code block at all** — inconsistent with every other step, and doesn't give the actual restart command.
+10. **Docker and Docker Compose are used without explanation** of what a container is or why this project uses two of them.
+11. **Caddy and the reverse-proxy/TLS-termination concept are introduced but not explained in plain language** — the architecture section describes the mechanics assuming prior knowledge of reverse proxies.
+12. **Troubleshooting entries are useful but still write at an intermediate level** (e.g. "the reverse proxy target wasn't ready" assumes the reader knows what a proxy target is), and there's no basic "how do I check the logs" entry.
+
+**No rewrite performed.** No schema fields added. No other workflow touched.
+
+**Next checkpoint:** Awaiting project owner direction — likely Checkpoint 2 will address a subset of these findings (e.g. rewriting Prerequisites and adding an SSH/file-editing primer) for `n8n-docker-caddy` specifically, before any other guide is touched.
