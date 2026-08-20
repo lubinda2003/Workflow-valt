@@ -10,6 +10,7 @@ export interface Props {
     difficulty: string;
     readingTime: string;
     tools: string[];
+    cover?: string;
   }>;
 }
 
@@ -32,6 +33,7 @@ const { workflows } = Astro.props;
             difficulty={workflow.difficulty}
             readingTime={workflow.readingTime}
             tools={workflow.tools}
+            cover={workflow.cover}
           />
         ))}
       </div>
