@@ -105,6 +105,7 @@ const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
               difficulty={workflow.difficulty}
               readingTime={workflow.readingTime}
               tools={workflow.tools}
+              cover={workflow.cover}
             />
           </div>
         ))}
