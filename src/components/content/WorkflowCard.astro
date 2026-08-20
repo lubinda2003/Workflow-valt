@@ -10,27 +10,43 @@ export interface Props {
   difficulty: string;
   readingTime: string;
   tools: string[];
+  cover?: string;
 }
 
-const { slug, title, description, category, difficulty, readingTime, tools } = Astro.props;
+const { slug, title, description, category, difficulty, readingTime, tools, cover } = Astro.props;
+
+// Not every cover asset is guaranteed to exist on disk yet, so the <img>
+// degrades to a CSS-only patterned fallback (built from existing tokens,
+// no extra request) instead of showing a broken-image icon.
 ---
 
 <a href={`/workflows/${slug}`} class="card workflow-card">
-  <div class="card-top">
-    <span class="category">{category}</span>
-    <Badge label={difficulty} tone="accent" />
+  <div class="cover">
+    {cover && <img src={cover} alt="" loading="lazy" onerror="this.remove()" />}
+    <div class="cover-fallback" aria-hidden="true">
+      <span class="node"></span>
+      <span class="node"></span>
+      <span class="node"></span>
+    </div>
   </div>
 
-  <h3>{title}</h3>
-  <p>{description}</p>
+  <div class="card-content">
+    <div class="card-top">
+      <span class="category">{category}</span>
+      <Badge label={difficulty} tone="accent" />
+    </div>
 
-  <div class="tools">
-    {tools.slice(0, 3).map((tool) => <ToolTag label={tool} />)}
-  </div>
+    <h3>{title}</h3>
+    <p>{description}</p>
 
-  <div class="card-bottom">
-    <span class="reading-time">{readingTime} read</span>
-    <span class="link">View guide &rarr;</span>
+    <div class="tools">
+      {tools.slice(0, 3).map((tool) => <ToolTag label={tool} />)}
+    </div>
+
+    <div class="card-bottom">
+      <span class="reading-time">{readingTime} read</span>
+      <span class="link">View guide &rarr;</span>
+    </div>
   </div>
 </a>
 
@@ -38,8 +54,55 @@ const { slug, title, description, category, difficulty, readingTime, tools } = A
   .workflow-card {
     display: flex;
     flex-direction: column;
-    padding: var(--space-4);
+    padding: 0;
     border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .cover {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+
+  .cover-fallback {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    background:
+      radial-gradient(circle at 30% 30%, var(--accent-soft), transparent 60%);
+  }
+
+  .cover-fallback .node {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .cover-fallback .node:nth-child(2) {
+    background: var(--accent);
+  }
+
+  .card-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: var(--space-4);
   }
 
   .card-top {
