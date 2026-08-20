@@ -1,3 +1,16 @@
+---
+// Stage data for the pipeline visual. "current" marks the stage shown as
+// live/active (accent glow + pulse), representing the ongoing "Automate"
+// phase of a running workflow.
+const stages = [
+  { name: "Research", description: "Scope the problem and the tools it needs." },
+  { name: "Build", description: "Assemble the workflow, step by step." },
+  { name: "Connect", description: "Wire up integrations and credentials." },
+  { name: "Automate", description: "Run it on a schedule or a trigger.", current: true },
+  { name: "Verify", description: "Confirm the result holds up in production." },
+];
+---
+
 <section class="hero">
   <div class="container">
 
@@ -20,29 +33,23 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="pipeline">
+      <p class="pipeline-label">How a workflow moves through the vault</p>
 
-      <div class="header">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
+      <div class="pipeline-track">
+        {stages.map((stage, i) => (
+          <div class:list={["stage", stage.current && "is-current"]}>
+            <div class="stage-marker">
+              <span>{String(i + 1).padStart(2, "0")}</span>
+              {stage.current && <span class="pulse" aria-hidden="true"></span>}
+            </div>
+            <div class="stage-body">
+              <p class="stage-name">{stage.name}</p>
+              <p class="stage-desc">{stage.description}</p>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <div class="item">
-        <span>🤖 AI Research Agent</span>
-        <strong>Running</strong>
-      </div>
-
-      <div class="item">
-        <span>⚡ GitHub Actions</span>
-        <strong>Active</strong>
-      </div>
-
-      <div class="item">
-        <span>☁️ Cloudflare Deploy</span>
-        <strong>Success</strong>
-      </div>
-
     </div>
 
   </div>
@@ -98,41 +105,111 @@ h1 span{
   text-decoration:none;
 }
 
-.card{
+.pipeline{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:20px;
-  padding:1.5rem;
+  border-radius:var(--radius-lg);
+  padding:var(--space-4);
 }
 
-.header{
+.pipeline-label{
+  font-size:var(--fs-xs);
+  font-weight:700;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:var(--space-3);
+}
+
+.pipeline-track{
+  position:relative;
+}
+
+.pipeline-track::before{
+  content:"";
+  position:absolute;
+  left:19px;
+  top:24px;
+  bottom:24px;
+  width:1px;
+  background:var(--border);
+}
+
+.stage{
+  position:relative;
   display:flex;
-  gap:.5rem;
-  margin-bottom:1.5rem;
+  gap:var(--space-3);
+  padding:var(--space-2) 0;
 }
 
-.dot{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-}
-
-.red{background:#ff5f57;}
-.yellow{background:#febc2e;}
-.green{background:#28c840;}
-
-.item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:1rem;
-  margin-bottom:1rem;
+.stage-marker{
+  position:relative;
+  flex-shrink:0;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  background:var(--surface-2);
   border:1px solid var(--border);
-  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1;
+  transition:var(--transition);
 }
 
-.item strong{
+.stage-marker span:first-child{
+  font-family:monospace;
+  font-weight:700;
+  font-size:var(--fs-xs);
+  color:var(--text-muted);
+  transition:var(--transition);
+}
+
+.stage-body{
+  padding-top:.2rem;
+}
+
+.stage-name{
+  font-size:1rem;
+  font-weight:700;
+  margin-bottom:.2rem;
+  transition:var(--transition);
+}
+
+.stage-desc{
+  font-size:var(--fs-xs);
+  color:var(--text-muted);
+  margin:0;
+}
+
+.stage.is-current .stage-marker{
+  background:var(--accent-soft);
+  border-color:var(--accent);
+}
+
+.stage.is-current .stage-marker span:first-child{
   color:var(--accent);
+}
+
+.stage.is-current .stage-name{
+  color:var(--accent);
+}
+
+.pulse{
+  position:absolute;
+  top:-2px;
+  right:-2px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:pulse 2s ease-out infinite;
+}
+
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(255,107,0,.5); }
+  70%{ box-shadow:0 0 0 10px rgba(255,107,0,0); }
+  100%{ box-shadow:0 0 0 0 rgba(255,107,0,0); }
 }
 
 @media (max-width:900px){
