@@ -253,19 +253,22 @@ The project owner has reported that Cloudflare Pages successfully built and depl
 
 - **CSS-only, no Tailwind** (removed Phase 1). Do not reintroduce it.
 - **`tokens.css`** (single source of truth for all design values):
-  - Colors: `--bg:#090909`, `--surface:#111111`, `--surface-2:#191919`, `--text:#ffffff`, `--text-muted:#9b9b9b`, `--accent:#ff6b00`, `--accent-hover:#ff8533`, `--border:#252525`
+  - Colors: `--bg:#090909`, `--surface:#111111`, `--surface-2:#191919`, `--text:#ffffff`, `--text-muted:#9b9b9b`, `--accent:#ff6b00`, `--accent-hover:#ff8533`, `--border:#252525`, `--accent-soft:rgba(255,107,0,.12)` (added Checkpoint UI-1)
   - Layout: `--container:1280px`, `--radius-sm:12px`, `--radius:18px`, `--radius-lg:28px`
   - Typography scale: `--fs-xs:.875rem` through `--fs-2xl:4.5rem`
   - Spacing scale: `--space-1:.5rem` through `--space-6:5rem`
   - `--shadow: 0 0 40px rgba(255,107,0,.12)`, `--transition:.3s ease`
 - **`global.css`** imports `tokens.css`, then defines resets, base typography, `.container`, `.button`, `.card`, `.grid` utility classes
 - Dark theme, orange accent, card-based layouts throughout, generous spacing
+- **Typography**: `font-family: Inter, system-ui, sans-serif` is now actually loaded via a Google Fonts link in `BaseLayout.astro` (fixed Checkpoint UI-1 — previously requested but never loaded, so it silently fell back to system-ui everywhere)
 - **Navigation**: sticky header, active-page highlighting (prefix-matched against `Astro.url.pathname`), working hamburger mobile menu (vanilla JS toggle, native `<details>` used elsewhere for TOC/troubleshooting)
 - **Responsive**: breakpoints generally at 900px and 600px across components
+- **Hero**: as of Checkpoint UI-1, the homepage hero uses a 5-stage Research → Build → Connect → Automate → Verify pipeline visual (not the old fake-terminal mock)
+- **Workflow cards**: as of Checkpoint UI-1, `WorkflowCard` renders a cover image band (with a CSS-only fallback pattern since no actual cover image files exist in the repo yet)
 
 ### ⚠️ UI dissatisfaction (explicitly recorded project feedback)
 
-The current UI works technically, but **the project owner is not satisfied with the overall visual design.** It's described as feeling too generic. A UI reference was provided earlier in the project but was not adequately communicated to the AI assistant during implementation, so it was not followed. **Future visual work should aim for a much more distinctive, polished product aesthetic** — the stated quality bar is closer to Vercel, Linear, or Supabase, but **Workflow Vault should have its own visual identity, not copy theirs.** No redesign has been authorized yet — do not redesign without explicit approval.
+The current UI works technically, but **the project owner was not satisfied with the overall visual design** before Checkpoint UI-1. A UI audit and improvement proposal was produced and approved with adjustments; implementation is now underway in small checkpoints (see Section 23). **The quality bar is closer to Vercel, Linear, or Supabase, but Workflow Vault should have its own visual identity, not copy theirs.** Further redesign still proceeds only checkpoint by checkpoint, not all at once.
 
 ---
 
@@ -347,8 +350,9 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 1. **GitHub API file writes without a `sha` can silently fail against pre-existing files.** If a file already exists at a given path, an API write that omits the current `sha` returns an error but may look like a transient/harmless glitch — always verify the actual live content after any "sha wasn't supplied"-type error rather than assuming success.
 2. **Relative import depth must match actual file nesting exactly.** `src/pages/workflows/index.astro` and `src/pages/categories/index.astro` are one directory deeper than `src/pages/index.astro` and therefore need `../../` not `../` to reach `src/layouts/` or `src/lib/`. This exact mistake broke the Cloudflare build once already — always sanity-check import depth against the file's actual path before committing new nested pages.
 3. **Cloudflare's build failure and GitHub Actions' build failure are correlated but not identical systems** — see Section 10.
-4. **This assistant cannot execute `npm run build`, run a browser, or access Cloudflare's dashboard from its working sandbox.** All build verification must happen via the project owner checking GitHub Actions and/or Cloudflare Pages directly and reporting back.
+4. **This assistant cannot execute `npm run build`, run a browser, or access Cloudflare's dashboard from its working sandbox.** All build verification must happen via the project owner checking GitHub Actions and/or Cloudflare Pages directly and reporting back. (Updated in Checkpoint UI-1: when a local sandbox with node/npm and a git clone of the repo is available, `npm install && npm run build` CAN be run directly and should be used to verify changes before committing — this was done successfully for UI-1. The older limitation still applies when no such sandbox is available.)
 5. **A CSS Grid track with no explicit `minmax(0, ...)` will expand to fit non-wrapping content** (like `white-space: pre` code blocks), even if the element itself has `overflow-x: auto` — the overflow property never gets a chance to activate if the track already grew to accommodate the content. This caused the Phase 7 mobile overflow bug and is worth remembering for any future grid layout containing code blocks.
+6. **The GitHub MCP tool available in this environment only supports single-file commits** (no atomic multi-file commit/tree API is exposed). A logical checkpoint touching N files therefore lands as N separate commits with the same message, not one atomic commit — note this explicitly when reporting commit hashes for a multi-file change.
 
 ---
 
@@ -360,16 +364,17 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 4. Prefer one focused change at a time.
 5. Preserve the existing architecture unless a change is explicitly approved.
 6. Use CSS only; do not reintroduce Tailwind.
-7. Reuse existing design tokens (`tokens.css`) rather than inventing new values.
+7. Reuse existing design tokens (`tokens.css`) rather than inventing new values unless genuinely necessary and shared across components.
 8. Do not invent content when real repository data is available — inspect the repo first.
 9. Verify actual repository state before claiming something exists.
 10. Never claim a workflow works unless it has actually been tested, or clearly label it as unverified (see Section 9).
-11. Build verification should happen through GitHub Actions/Cloudflare when local execution isn't available — this assistant cannot run builds itself.
+11. Build verification should happen locally (npm install + npm run build) when a sandbox with node/npm and a repo clone is available; otherwise verification happens through GitHub Actions/Cloudflare reported back by the project owner.
 12. Keep the website beginner-friendly (see Section 5's content quality problem).
 13. Do not start the next phase until the current phase is reviewed and confirmed.
-14. Do not redesign the UI without explicit approval (see Section 11's UI dissatisfaction note).
+14. UI redesign now proceeds only checkpoint by checkpoint, per an approved proposal (see Section 23) — do not implement an entire redesign in one pass.
 15. Do not introduce a VPS/backend prematurely.
 16. Keep future architecture modular so verification infrastructure can be added later without a rewrite.
+17. Do not add new npm dependencies unless explicitly approved.
 
 ---
 
@@ -382,16 +387,16 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 | Workflow verification | Not implemented | No workflow has ever been executed/tested | High (long-term) |
 | Automated content pipeline | Not implemented | Every guide is hand-authored by an AI assistant in conversation | High (long-term) |
 | Search/research APIs | Not implemented | No external research layer exists | Medium (long-term) |
-| UI polish | Functional, on-brand color system, but owner is not satisfied | Needs a distinctive redesign pass (Section 11) | Medium |
+| UI polish | Checkpoint UI-1 complete (font loading, hero, workflow card covers) | Most of the site still awaits further redesign checkpoints (Section 23) | Medium |
 | SEO | Sitemap integration exists | Placeholder `site` domain, no robots.txt, no OG tags, no `public/` folder at all | High before launch |
 | AdSense readiness | Not started | Needs a real domain, SEO basics, and content volume first | Medium |
-| Documentation | This document, just created | Needs to be kept current (Section 20) | Ongoing |
+| Documentation | This document, kept current | Needs to be kept current (Section 21) | Ongoing |
 | Testing | None | No automated tests of any kind exist in this repo | Medium |
 | VPS sandbox | Not implemented | Future verification infrastructure | Low (until pipeline work begins) |
 | Monetization | Direction decided (ads-first), not implemented | No ads, no paywall infrastructure | Low |
 | Workflow request feature | Not implemented, not designed | Users currently have no way to request a workflow guide | Low |
 | `featured` schema field | Exists in schema, defaults `true` on all 6 entries | `FeaturedWorkflows.astro` on the homepage currently uses its own hardcoded list of 6 workflows rather than reading `featured` from the collection — worth reconciling later | Low |
-| `cover` schema field | Exists in schema | No actual cover images exist anywhere in the repo; field is decorative/unused in practice | Low |
+| `cover` schema field | Exists in schema, now rendered by `WorkflowCard` with a CSS fallback | No actual cover image files exist anywhere in the repo yet (see Section 23) | Low |
 | RSS | `@astrojs/rss` installed | No RSS route exists | Low |
 
 ---
@@ -404,7 +409,7 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 4. **Research layer** — add external search/research APIs to reduce hallucination in generated content (Section 8)
 5. **Verification sandbox** — introduce a VPS/container sandbox once the pipeline and verification concepts are proven (Section 7)
 6. **SEO/AdSense readiness** — fix the placeholder domain, add `robots.txt`, OG tags, `public/` assets, then pursue indexing and AdSense (Sections 12, 13)
-7. **UI redesign** — create a stronger, distinctive visual identity once explicitly approved (Section 11)
+7. **UI redesign** — continuing checkpoint by checkpoint per the approved proposal (Section 23); next up is code block syntax highlighting
 8. **User workflow requests** — potential future feature letting users request specific guides
 9. **Downloads/assets** — the originally-planned "Phase 8," deferred in favor of this documentation task; ties into future monetization (Section 13)
 
@@ -412,11 +417,11 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 
 ## 20. Claude Handover
 
-**Current repository state:** Clean, builds have been reported green by the project owner as of the most recent Phase 7 commits (2026-08-09, plus the mobile-overflow fix). No pending broken commits are known.
+**Current repository state:** Clean. Phase 7 was reported green by the project owner. Checkpoint UI-1 (Section 23) was verified with a local `npm run build` in the assistant's sandbox before committing - no errors. No pending broken commits are known.
 
-**Last completed phase:** Phase 7 — Workflow Experience (Table of Contents, copy-code buttons, architecture diagrams, checklist prerequisites, troubleshooting, next steps).
+**Last completed work**: Checkpoint UI-1 — typography fix, Hero redesign, WorkflowCard covers (Section 23). Before that, Phase 7 — Workflow Experience.
 
-**Last verified deployment:** Reported successful by the project owner following the Phase 7 mobile-overflow fix (commit `fix: resolve mobile horizontal overflow in workflow guide layout...`, 2026-08-09T14:42:43Z). Not independently verified via Cloudflare dashboard by this assistant — see Section 10.
+**Last verified deployment:** Phase 7 was reported successful by the project owner following the mobile-overflow fix (2026-08-09). Checkpoint UI-1's build was verified locally by this assistant but not yet confirmed on Cloudflare by the project owner — request that confirmation next.
 
 **Current known issues:**
 - `astro.config.mjs` has a placeholder `site` domain
@@ -424,27 +429,29 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 - `README.md` is stale — still lists Tailwind CSS as part of the tech stack, which was removed in Phase 1
 - `FeaturedWorkflows.astro` on the homepage uses a hardcoded list rather than the `featured` schema field
 - Guide content is not yet beginner-friendly enough (Section 5)
+- No actual cover image files exist yet (`WorkflowCard` now handles this gracefully with a CSS fallback, but real assets are still missing)
 
-**Current priorities (per project owner, most recent direction):** Documentation first (this file), then originally Phase 8 was planned as downloads/assets tied to future monetization — confirm with the project owner before starting any new feature phase.
+**Current priorities (per project owner, most recent direction):** UI redesign is now active, proceeding checkpoint by checkpoint per the approved proposal (Section 23). Phase 8 (guide content improvements) remains paused mid-Checkpoint 1 (Section 22) — confirm with the project owner which track to resume next.
 
-**Next recommended task:** Confirm with the project owner whether to (a) proceed to Phase 8 (downloads/assets), (b) address the content quality/beginner-friendliness gap first, or (c) fix the SEO gaps (placeholder domain, robots.txt, OG tags) before adding more features. Do not assume — ask.
+**Next recommended task:** Get Cloudflare build confirmation for Checkpoint UI-1, then ask the project owner whether to (a) continue UI redesign checkpoints (code block syntax highlighting is next), (b) resume Phase 8 content work (n8n-docker-caddy Checkpoint 2), or (c) fix the SEO gaps. Do not assume — ask.
 
 **Things that must not be changed without approval:**
 - The content collection schema's existing required fields (adding new *optional* fields is fine and has precedent)
-- `tokens.css` values
 - The Tailwind-free CSS architecture
 - The overall Astro static-site architecture (no framework migration, no server rendering mode change)
+- No new npm dependencies without explicit approval
 
 **Important architectural decisions:**
 - Content Layer API (`glob()` loader), not the legacy content collections API
 - All new workflow pages are created purely by adding a JSON file — never hardcode a workflow into a page
 - Category grouping matches on `slugify(workflow.category) === category.slug`, not a direct string match
 - Search/filtering is static-generation + vanilla-JS progressive enhancement, not a client framework
+- GitHub MCP here only commits one file at a time (Section 16, item 6) — multi-file checkpoints are sequential same-message commits, not one atomic commit
 
 **Important project-owner preferences:**
-- Work in small, reviewable phases; do not bundle unrelated changes
-- Wants real GitHub Actions/Cloudflare build confirmation before considering a change "done," but has also explicitly said not to over-formalize this into a hard stop-and-wait ritual for every single commit — use judgment based on risk
-- Is not satisfied with the current UI's genericness and wants a more distinctive future redesign, but has not approved starting one
+- Work in small, reviewable checkpoints/phases; do not bundle unrelated changes
+- Wants real build confirmation before considering a change "done" when possible, but has also explicitly said not to over-formalize this into a hard stop-and-wait ritual for every single commit — use judgment based on risk
+- Approved UI redesign (with adjustments) after reviewing a proposal; redesign must still proceed one small checkpoint at a time, never all at once
 - Cares specifically about guides being usable by true beginners, not just developers
 - The eventual bigger vision includes a verified (not just generated) workflow pipeline, a research API layer, a VPS sandbox, and ad-based monetization — all future, all currently unimplemented
 
@@ -452,17 +459,17 @@ Repository has 100+ commits spanning **2026-07-30 to 2026-08-12**. Timeline belo
 
 ## 21. Documentation maintenance rule
 
-> This blueprint must be updated whenever a major phase is completed, an architectural decision changes, a significant feature is added, a known issue is resolved, or the project's next priorities materially change.
+> This blueprint must be updated whenever a major phase/checkpoint is completed, an architectural decision changes, a significant feature is added, a known issue is resolved, or the project's next priorities materially change.
 
 It is intended to function as Workflow Vault's long-term memory across conversations and, if necessary, across different Claude accounts.
 
 ---
 
-## 22. Phase 8 Progress Log
+## 22. Phase 8 Progress Log (guide content improvements track — currently paused)
 
 ### Checkpoint 1 — Audit Only (Guide 1: n8n-docker-caddy)
 
-**Status:** Phase 8 has started. Working in small checkpoints per project owner's instruction. No implementation changes made in this checkpoint — audit only.
+**Status:** Complete. Phase 8 is currently paused mid-Checkpoint 1 while the UI redesign track (Section 23) is active. No implementation changes were made in this checkpoint — audit only.
 
 **Files inspected (fresh, direct from repository):**
 - `src/content/workflows/n8n-docker-caddy.json`
@@ -488,4 +495,95 @@ All three confirmed unchanged since Phase 7.
 
 **No rewrite performed.** No schema fields added. No other workflow touched.
 
-**Next checkpoint:** Awaiting project owner direction — likely Checkpoint 2 will address a subset of these findings (e.g. rewriting Prerequisites and adding an SSH/file-editing primer) for `n8n-docker-caddy` specifically, before any other guide is touched.
+**Next checkpoint:** When resumed, Checkpoint 2 should address a subset of these findings (e.g. rewriting Prerequisites and adding an SSH/file-editing primer) for `n8n-docker-caddy` specifically, before any other guide is touched.
+
+---
+
+## 23. UI Redesign Progress Log
+
+A UI audit and improvement proposal (visual identity, typography, spacing, cards,
+navigation, hero, guide pages, code blocks, diagrams, buttons, mobile, hierarchy)
+was produced and approved with adjustments. Implementation proceeds in small
+checkpoints, same discipline as Phase 8.
+
+### Checkpoint UI-1 — Typography fix, Hero redesign, Workflow card covers
+
+**Status: Complete.**
+
+**1. Typography fix**
+`global.css` requested `font-family: Inter, system-ui, sans-serif`, but no
+`<link>` or `@font-face` anywhere in the project ever loaded Inter — every page
+was silently rendering in the browser's default system-ui font. Fixed by adding
+`preconnect` + a Google Fonts stylesheet link (weights 400/500/600/700/800, matching
+every existing `font-weight` used across the site) to `src/layouts/BaseLayout.astro`.
+No serif introduced; no dependency added (this is a font resource link, not an npm
+package).
+
+**2. Hero redesign**
+`src/components/sections/Hero.astro`: removed the generic macOS-style fake-terminal
+window (traffic-light dots + "Running/Active/Success" rows). Replaced it with a
+5-stage vertical pipeline visual — **Research → Build → Connect → Automate → Verify**
+— built from a connecting timeline, circular step markers (reusing the same marker
+language already established in `StepSection.astro`), and one stage ("Automate")
+shown as live via an accent glow + CSS-only pulse animation. Zero JavaScript added.
+One new token added to `tokens.css`: `--accent-soft` (a reusable accent-tinted
+surface color), needed by both the Hero pulse/marker treatment and the new
+WorkflowCard cover fallback below — added to `tokens.css` because it was genuinely
+shared across two components, not duplicated as a magic value in each.
+
+**3. Workflow card covers**
+Before implementing, inspected the content schema and actual data: `cover` is an
+optional string on the `workflows` collection (`src/content.config.ts`), and every
+current workflow JSON file sets it to a path like
+`/images/workflows/<slug>.webp`. However **no `public/` directory and no `.webp
+files exist anywhere in the repository** — every cover reference is currently a
+dead link. Wiring a plain `<img src={cover}>` would have shown a broken-image icon
+on all six cards.
+
+Implemented instead: `WorkflowCard.astro` now accepts an optional `cover` prop and
+renders it inside a new `.cover` band at the top of the card. If the image 404s, a
+single inline `onerror="this.remove()"` (not a separate script, no framework) lets
+it fall away to reveal a CSS-only fallback pattern underneath (three dots on an
+accent-tinted radial gradient, echoing `ArchitectureDiagram`'s existing node
+visual language) — so cards look intentionally designed whether or not real cover
+art exists yet. The card's padding moved from the outer `<a>` to a new inner
+`.card-content` wrapper so the cover image can bleed to the card's edges. The
+component's public API (all existing required props) is unchanged; `cover` is
+additive and optional.
+
+All four call sites were updated to pass the field through:
+`RelatedWorkflows.astro`, `search.astro`, `categories/[slug].astro`,
+`workflows/index.astro`. (`FeaturedWorkflows.astro` on the homepage has its own
+separate card markup, not `WorkflowCard`, and was intentionally left untouched —
+out of scope for this checkpoint.)
+
+**Files changed:** `src/layouts/BaseLayout.astro`, `src/styles/tokens.css`,
+`src/components/sections/Hero.astro`, `src/components/content/WorkflowCard.astro`,
+`src/components/content/RelatedWorkflows.astro`, `src/pages/search.astro`,
+`src/pages/categories/[slug].astro`, `src/pages/workflows/index.astro`.
+
+**Not touched:** workflow JSON content, `content.config.ts` schema requirements,
+the verification pipeline, search functionality, routing, deployment
+configuration, and every page/section not listed above (Categories, Features,
+Stats, CTA, Footer, StepSection, CodeBlock, ArchitectureDiagram, FeaturedWorkflows
+are all unchanged and still pending their own future checkpoints).
+
+**Build verification:** `npm install && npm run build` was run locally in the
+assistant's sandbox (fresh clone of `main`) and completed with no errors — all
+static routes (home, about, resources, search, categories index + 8 category
+pages, workflows index + 6 guide pages) prerendered successfully. Confirmed in the
+build output: the Google Fonts link is present in rendered HTML, the pipeline
+markup replaced the old fake-terminal markup with zero occurrences remaining, and
+the cover/cover-fallback markup renders on every workflow card. This was a local
+build, not yet confirmed on Cloudflare by the project owner.
+
+**Commit note:** The GitHub MCP tool available in this environment only supports
+single-file commits (no atomic multi-file commit API). The 8 changed source files
++ this blueprint update were therefore committed as 9 separate sequential commits
+all sharing the message `feat(ui): establish workflow vault visual foundation`,
+not one atomic commit.
+
+**Next recommended UI checkpoint:** Code block syntax highlighting (Astro ships
+Shiki internally, so this needs zero new dependencies) — it's the single highest-
+contrast, lowest-risk visual upgrade remaining, since `CodeBlock.astro` currently
+renders all code as flat, unhighlighted white monospace text.
