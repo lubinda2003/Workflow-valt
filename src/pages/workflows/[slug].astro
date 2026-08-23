@@ -8,6 +8,7 @@ import StepSection from "../../components/content/StepSection.astro";
 import RelatedWorkflows from "../../components/content/RelatedWorkflows.astro";
 import TableOfContents from "../../components/content/TableOfContents.astro";
 import ArchitectureDiagram from "../../components/content/ArchitectureDiagram.astro";
+import Glossary from "../../components/content/Glossary.astro";
 import { getWorkflowsByCategorySlug } from "../../lib/workflows.js";
 import { slugify } from "../../lib/slugify.js";
 
@@ -28,6 +29,9 @@ const related = (await getWorkflowsByCategorySlug(slugify(workflow.category)))
 
 const tocItems = [
   { id: "overview", label: "Overview" },
+  ...(workflow.glossary.length > 0
+    ? [{ id: "glossary", label: "Glossary" }]
+    : []),
   { id: "prerequisites", label: "Prerequisites" },
   { id: "steps", label: "Step-by-Step" },
   { id: "architecture", label: "Architecture" },
@@ -53,6 +57,7 @@ const tocItems = [
     difficulty={workflow.difficulty}
     readingTime={workflow.readingTime}
     tools={workflow.tools}
+    whatYoullBuild={workflow.whatYoullBuild}
   />
 
   <section class="guide">
@@ -65,7 +70,20 @@ const tocItems = [
         <div class="guide-section" id="overview">
           <h2>Overview</h2>
           <p>{workflow.overview}</p>
+          {workflow.beforeYouBegin && (
+            <div class="before-you-begin">
+              <span class="before-label">Before you begin</span>
+              <p>{workflow.beforeYouBegin}</p>
+            </div>
+          )}
         </div>
+
+        {workflow.glossary.length > 0 && (
+          <div class="guide-section" id="glossary">
+            <h2>Glossary</h2>
+            <Glossary terms={workflow.glossary} />
+          </div>
+        )}
 
         <div class="guide-section" id="prerequisites">
           <h2>Prerequisites</h2>
@@ -82,6 +100,8 @@ const tocItems = [
                 number={index + 1}
                 title={step.title}
                 content={step.content}
+                why={step.why}
+                expectedResult={step.expectedResult}
                 code={step.code}
               />
             ))}
@@ -166,6 +186,30 @@ const tocItems = [
   .guide-section h2 {
     font-size: 1.5rem;
     margin-bottom: var(--space-3);
+  }
+
+  .before-you-begin {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .before-you-begin p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .before-label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: .4rem;
   }
 
   .prereq-list {
