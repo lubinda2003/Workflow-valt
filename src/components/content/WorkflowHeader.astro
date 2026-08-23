@@ -9,9 +9,10 @@ export interface Props {
   difficulty: string;
   readingTime: string;
   tools: string[];
+  whatYoullBuild?: string;
 }
 
-const { title, description, category, difficulty, readingTime, tools } = Astro.props;
+const { title, description, category, difficulty, readingTime, tools, whatYoullBuild } = Astro.props;
 ---
 
 <header class="workflow-header">
@@ -28,6 +29,13 @@ const { title, description, category, difficulty, readingTime, tools } = Astro.p
 
     <h1>{title}</h1>
     <p class="description">{description}</p>
+
+    {whatYoullBuild && (
+      <div class="build-callout">
+        <span class="build-label">What you'll build</span>
+        <p>{whatYoullBuild}</p>
+      </div>
+    )}
 
     <ToolList tools={tools} />
   </div>
@@ -83,5 +91,29 @@ const { title, description, category, difficulty, readingTime, tools } = Astro.p
     max-width: 640px;
     font-size: var(--fs-md);
     margin-bottom: var(--space-4);
+  }
+
+  .build-callout {
+    max-width: 640px;
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+  }
+
+  .build-callout p {
+    margin: 0;
+    font-size: var(--fs-sm);
+  }
+
+  .build-label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent);
+    margin-bottom: .4rem;
   }
 </style>
