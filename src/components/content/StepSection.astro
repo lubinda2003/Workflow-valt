@@ -5,10 +5,12 @@ export interface Props {
   number: number;
   title: string;
   content: string;
+  why?: string;
+  expectedResult?: string;
   code?: { language: string; code: string };
 }
 
-const { number, title, content, code } = Astro.props;
+const { number, title, content, why, expectedResult, code } = Astro.props;
 ---
 
 <div class="step">
@@ -17,6 +19,18 @@ const { number, title, content, code } = Astro.props;
     <h3>{title}</h3>
     <p>{content}</p>
     {code && <CodeBlock language={code.language} code={code.code} />}
+    {why && (
+      <div class="step-note step-why">
+        <span class="step-note-label">Why this matters</span>
+        <p>{why}</p>
+      </div>
+    )}
+    {expectedResult && (
+      <div class="step-note step-expected">
+        <span class="step-note-label">What you should see</span>
+        <p>{expectedResult}</p>
+      </div>
+    )}
   </div>
 </div>
 
@@ -60,5 +74,40 @@ const { number, title, content, code } = Astro.props;
 
   .step-body p {
     font-size: var(--fs-sm);
+  }
+
+  .step-note {
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .step-note p {
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .step-note-label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .4rem;
+  }
+
+  .step-why .step-note-label {
+    color: var(--text-muted);
+  }
+
+  .step-expected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .step-expected .step-note-label {
+    color: var(--accent);
   }
 </style>
