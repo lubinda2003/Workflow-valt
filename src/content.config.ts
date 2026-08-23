@@ -16,11 +16,23 @@ const workflows = defineCollection({
     tools: z.array(z.string()),
     cover: z.string().optional(),
     overview: z.string(),
+    whatYoullBuild: z.string().optional(),
+    beforeYouBegin: z.string().optional(),
+    glossary: z
+      .array(
+        z.object({
+          term: z.string(),
+          definition: z.string(),
+        })
+      )
+      .default([]),
     prerequisites: z.array(z.string()),
     steps: z.array(
       z.object({
         title: z.string(),
         content: z.string(),
+        why: z.string().optional(),
+        expectedResult: z.string().optional(),
         code: z
           .object({
             language: z.string(),
