@@ -1,0 +1,48 @@
+---
+export interface Props {
+  terms: { term: string; definition: string }[];
+}
+
+const { terms } = Astro.props;
+---
+
+{terms.length > 0 && (
+  <div class="glossary">
+    <dl>
+      {terms.map((entry) => (
+        <div class="glossary-item">
+          <dt>{entry.term}</dt>
+          <dd>{entry.definition}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+)}
+
+<style>
+  .glossary dl {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .glossary-item {
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .glossary-item dt {
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    color: var(--accent);
+    margin-bottom: .3rem;
+  }
+
+  .glossary-item dd {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+</style>
