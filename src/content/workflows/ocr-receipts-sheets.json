@@ -4,7 +4,7 @@
   "description": "Scan receipts, extract line items with OCR, and log them to Google Sheets automatically.",
   "category": "Data & OCR",
   "difficulty": "Beginner",
-  "readingTime": "9 min",
+  "readingTime": "14 min",
   "featured": true,
   "tags": [
     "OCR",
@@ -16,20 +16,70 @@
     "Google Sheets"
   ],
   "cover": "/images/workflows/ocr-receipts-sheets.webp",
-  "overview": "A pipeline that scans photographed receipts, extracts line items and totals with OCR, and appends the structured data to a Google Sheet automatically.",
+  "overview": "This guide explains a pattern for turning photographed receipts into clean, itemized rows in a Google Sheet, with no manual typing. A photo goes in one end; a spreadsheet row for each item comes out the other. Every technical term used along the way (OCR, service account, confidence score, and so on) is explained in the Glossary section below before it's used. Unlike a fully turnkey server setup, this guide describes the shape of the pipeline and the exact calls to the OCR and Sheets APIs — you'll need to host the small piece of code that ties them together yourself, on whatever backend you're comfortable with.",
+  "whatYoullBuild": "A small pipeline that takes a photo of a receipt, sends it to an OCR (text-recognition) service to pull out the merchant, date, line items, and total, cleans up that data, and appends it to a Google Sheet as one row per item — with low-confidence scans routed to manual review instead of silently logging bad data.",
+  "beforeYouBegin": "Budget about 30–45 minutes to read through this guide and adapt the code to your own OCR provider and hosting setup, plus however long it takes you to enable the Google Sheets API and create a service account (usually 10–15 minutes the first time). Costs vary: Google Sheets itself is free to use via the API, but most OCR providers charge per scan or per API call once you're past a free tier — check your chosen provider's pricing before processing large batches of receipts. This guide has been written from technical documentation and general best practice, but — like every guide currently on Workflow Vault — it is UNVERIFIED: it has not yet been run end-to-end and confirmed working by Workflow Vault's own testing. It also intentionally stops short of prescribing one specific OCR vendor or hosting platform, since either choice changes some of the exact setup steps; read each step as a well-researched pattern to adapt, not a guarantee or a fully turnkey deployment.",
+  "glossary": [
+    {
+      "term": "OCR (Optical Character Recognition)",
+      "definition": "OCR is technology that reads text out of an image — for example, turning a photo of a receipt into the actual words and numbers printed on it. This guide relies on a third-party OCR service to do that reading rather than building text recognition from scratch."
+    },
+    {
+      "term": "OCR provider",
+      "definition": "The specific company or API you send images to for OCR, such as Google Cloud Vision or a receipt-specialized OCR service. Different providers return slightly different data shapes, so this guide uses a generic placeholder (see \"ocrClient\" below) that you'll connect to whichever provider you choose."
+    },
+    {
+      "term": "Ingest endpoint",
+      "definition": "A web address on a server you control that's ready to receive an uploaded file — in this case, a photographed receipt. This guide describes what that endpoint should do with the image once it arrives, but building and hosting the endpoint itself is left up to you, since the right choice (a Cloudflare Worker, a small Node.js server, and so on) depends on what you already use."
+    },
+    {
+      "term": "Service account",
+      "definition": "A special Google account meant for a program to use instead of a person. You create one in Google Cloud, download its credentials, and share your spreadsheet with its email address so your automation can write to Sheets without you typing a password anywhere."
+    },
+    {
+      "term": "API key",
+      "definition": "A secret string that identifies your application to a service and authorizes it to make requests. Most OCR providers issue one when you sign up; it should be stored as an environment variable, never written directly into your code."
+    },
+    {
+      "term": "Google Sheets API",
+      "definition": "A programmatic interface that lets code read from and write to a Google Sheet, the same way a person would by typing into cells — except done automatically, row by row, from a script."
+    },
+    {
+      "term": "Spreadsheet ID",
+      "definition": "A long string of letters and numbers in a Google Sheet's URL that uniquely identifies that specific spreadsheet to the Sheets API. You'll copy this out of your browser's address bar when you're viewing the target sheet."
+    },
+    {
+      "term": "Confidence score",
+      "definition": "A number an OCR provider returns alongside its guess at what text is in an image, indicating how sure it is that the reading is correct. A low score is a signal that the photo was blurry, dark, or otherwise hard to read, and the result may be wrong."
+    },
+    {
+      "term": "Line item",
+      "definition": "One individual product or charge on a receipt — for example, a single \"Coffee $4.50\" entry. A receipt with five purchases has five line items, each of which becomes its own row in the spreadsheet."
+    },
+    {
+      "term": "Normalization",
+      "definition": "Cleaning up raw extracted data into a consistent format before it's used further — for example, turning \"$4.50\", \"4.50 USD\", and \"USD4.50\" into the same plain number, or merging two OCR results that clearly describe the same item."
+    }
+  ],
   "prerequisites": [
-    "A Google Cloud project with the Sheets API enabled",
-    "An OCR provider API key, such as Google Vision or a dedicated receipt-OCR API",
-    "A service account with edit access to the target spreadsheet"
+    "[You'll need this already] A Google Cloud project with the Sheets API enabled, and a service account with edit access to your target spreadsheet. See the Glossary above for what a service account is.",
+    "[You'll need this already] An account and API key with an OCR provider capable of reading receipts, such as Google Cloud Vision or a dedicated receipt-OCR API. This guide does not pick a provider for you — you'll need to sign up with one and get its credentials before adapting the code below to match its actual SDK or REST API.",
+    "[You'll need this already] A small server or endpoint you control that can receive an uploaded image over the web. This guide describes what that endpoint should do once a photo arrives, but does not provide ready-to-deploy endpoint code — you can build one with any backend you're comfortable with, such as a Cloudflare Worker or a small Node.js/Express app.",
+    "[You'll need this already] Basic comfort reading JavaScript and making API calls from code. You do not need prior experience with OCR or the Sheets API specifically — every term used is explained in the Glossary above.",
+    "[Optional, not required] A mobile shortcut or share-sheet action for quickly sending a phone photo to your ingest endpoint, if you want hands-free capture instead of uploading through a form."
   ],
   "steps": [
     {
       "title": "Capture the receipt",
-      "content": "Upload a photo through a simple form or a mobile shortcut that posts the image to your automation's ingest endpoint."
+      "content": "Set up a way to get a photo of the receipt to your ingest endpoint — an HTTP address on a server you control that's ready to accept an image upload. The simplest option is a basic web form with a file input; a more convenient option, once the pipeline works, is a mobile shortcut that posts the photo directly from your phone's camera roll.",
+      "why": "Every later step depends on the raw image being available somewhere your code can reach it. Starting with the simplest possible upload path (a form, or a single shortcut action) keeps this first step easy to test in isolation before you connect it to OCR.",
+      "expectedResult": "After uploading a test photo, your server-side code should have the image's raw bytes available in memory or in a temporary file — confirm this by logging the file size, which should roughly match the photo's actual file size and not be zero."
     },
     {
       "title": "Run OCR extraction",
-      "content": "Send the image to the OCR provider and request structured fields rather than raw text where the API supports it.",
+      "content": "Send the captured image to your OCR provider and ask for structured fields (merchant, date, line items, total) rather than a single block of raw text, if your provider supports that mode — it saves you from having to parse plain text yourself. The `ocrClient` in the code below is a stand-in for whichever SDK or REST client you set up for your chosen provider; replace it with the real client once you've signed up and installed it.",
+      "why": "Requesting structured fields up front, instead of a wall of raw text, pushes the hardest part of the parsing work onto the OCR provider, which is generally better at it than a hand-rolled regex would be.",
+      "expectedResult": "The response should be an object shaped roughly like the comment in the code below: a merchant name, a date, an array of items each with a name and price, and a total. Log this object once for a real receipt and manually check the numbers against the physical receipt before moving on.",
       "code": {
         "language": "javascript",
         "code": "const result = await ocrClient.extractReceipt(imageBuffer);\n// result: { merchant, date, items: [{ name, price }], total }"
@@ -37,11 +87,15 @@
     },
     {
       "title": "Normalize the data",
-      "content": "Clean up currency formatting and merge near-duplicate line items before writing anything to the sheet."
+      "content": "Before anything touches the spreadsheet, clean up the OCR output: strip currency symbols and standardize decimal formatting so every price is a plain number (4.99, not \"$4.99\" or \"4,99\"), and check for near-duplicate line items that OCR sometimes splits into two rows by mistake.",
+      "why": "Bad formatting is easy to fix once, here, before it becomes fifty inconsistent rows in a shared spreadsheet that someone else has to clean up by hand later.",
+      "expectedResult": "After normalizing, log the item list once more and confirm every price is a plain number (not a string with a currency symbol) and that the count of items roughly matches what's actually printed on the receipt."
     },
     {
       "title": "Append to Google Sheets",
-      "content": "Use the Sheets API to append one row per line item, tagged with the receipt's merchant and date.",
+      "content": "Using an authenticated Sheets API client (built from your service account's credentials), append one row per line item to the target sheet, tagging each row with the receipt's merchant and date so rows from the same receipt can be grouped later. The `sheets` object in the code below refers to that already-authenticated client — setting up that authentication is a one-time step handled by whichever Google API client library you use (for example, the `googleapis` npm package with your service account key file).",
+      "why": "Appending rather than overwriting means every run adds new data without touching what's already there, so a failed or repeated run can't accidentally erase previous receipts.",
+      "expectedResult": "After the call resolves without throwing, refresh the actual spreadsheet in your browser — one new row per line item should appear in the Receipts sheet, in columns A through D, with the merchant and date matching the receipt you scanned.",
       "code": {
         "language": "javascript",
         "code": "await sheets.spreadsheets.values.append({\n  spreadsheetId,\n  range: 'Receipts!A:D',\n  valueInputOption: 'USER_ENTERED',\n  requestBody: {\n    values: result.items.map(i => [result.date, result.merchant, i.name, i.price])\n  }\n});"
@@ -49,11 +103,13 @@
     },
     {
       "title": "Flag low-confidence scans",
-      "content": "If the OCR provider returns a confidence score below your threshold, route the receipt to a manual review queue instead of writing bad data into the sheet."
+      "content": "If your OCR provider returns a confidence score below a threshold you choose, route that receipt to a manual review queue (even something as simple as a separate \"Needs review\" sheet tab) instead of writing it to the main spreadsheet.",
+      "why": "A low-confidence result is often wrong in ways that aren't obvious at a glance — silently logging it would quietly pollute the spreadsheet with bad numbers that are harder to catch later than an obviously-blank row would be.",
+      "expectedResult": "Test this by deliberately photographing a receipt at a steep angle or in dim light. That scan should land in your review queue instead of the main Receipts sheet — if it still writes to the main sheet, your confidence threshold is set too low."
     }
   ],
-  "architecture": "Images flow through a single ingest endpoint into the OCR provider, then through a normalization step before touching the spreadsheet. Keeping normalization separate from extraction makes it easy to swap OCR providers later without changing how data lands in Sheets.",
-  "result": "Receipts logged as clean, itemized rows in Google Sheets within seconds of being photographed, with no manual data entry.",
+  "architecture": "Images flow through a single ingest endpoint (which you build and host) into the OCR provider, then through a normalization step before touching the spreadsheet. Keeping normalization separate from extraction means you can swap OCR providers later without changing how data lands in Sheets. The confidence check sits as a gate right before the Sheets write, so low-quality reads never make it into the shared spreadsheet in the first place.",
+  "result": "Receipts logged as clean, itemized rows in Google Sheets within seconds of being photographed, with no manual data entry — and receipts OCR struggled to read routed to a review queue instead of silently corrupting the sheet. As noted above, this guide is unverified by Workflow Vault; treat the outcome as expected-but-not-yet-confirmed until you've run it yourself against a real OCR provider.",
   "troubleshooting": [
     {
       "issue": "OCR returns garbled or empty text",
@@ -69,6 +125,11 @@
       "issue": "Line item totals don't match the receipt total",
       "cause": "OCR occasionally splits one line item into two separate rows.",
       "fix": "Add a validation step that sums extracted line items and flags the receipt for manual review if it doesn't match the extracted total."
+    },
+    {
+      "issue": "OCR calls fail with an authentication error",
+      "cause": "The OCR provider's API key is missing from the environment, wasn't loaded before the request fired, or was typed into the code directly instead of read from an environment variable.",
+      "fix": "Confirm the key is set as an environment variable in your hosting platform's settings and that your code reads it from there, then redeploy or restart the process."
     }
   ],
   "nextSteps": [
