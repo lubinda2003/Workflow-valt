@@ -1,10 +1,10 @@
 {
   "slug": "n8n-docker-caddy",
   "title": "Self-host n8n with Docker + Caddy",
-  "description": "A production n8n stack with automatic HTTPS and persistent workflow storage on a $5 VPS.",
+  "description": "Run your own n8n automation server on a rented Linux server, with a free HTTPS certificate and workflow data that survives restarts. Written for readers with little or no prior server experience.",
   "category": "n8n",
-  "difficulty": "Intermediate",
-  "readingTime": "15 min",
+  "difficulty": "Beginner",
+  "readingTime": "30 min",
   "featured": true,
   "tags": [
     "n8n",
@@ -17,25 +17,86 @@
     "Caddy"
   ],
   "cover": "/images/workflows/n8n-docker-caddy.webp",
-  "overview": "This guide walks through deploying a self-hosted n8n instance behind Caddy on a single low-cost VPS, with automatic TLS and workflows persisted to disk so a redeploy never wipes your data.",
+  "overview": "This guide walks through renting a small server, installing the software it needs, and running your own private n8n automation instance on it — reachable at your own domain, secured with a free HTTPS certificate that renews itself. Every technical term used along the way (VPS, SSH, Docker, reverse proxy, and so on) is explained in the Glossary section below before it's used.",
+  "whatYoullBuild": "A self-hosted n8n instance running on your own server, reachable at https://your-domain.com with a valid, auto-renewing HTTPS certificate. Your workflows and credentials will be saved to disk, so restarting the server or updating n8n won't erase your work.",
+  "beforeYouBegin": "Budget about 30–45 minutes for the steps below, plus extra time for DNS to update (this can take anywhere from a few minutes to about 48 hours, and is outside your control). Ongoing cost is roughly $4–15/month for the server plus $10–15/year for the domain, depending on provider. This guide has been written from technical documentation and general best practice, but — like every guide currently on Workflow Vault — it is UNVERIFIED: it has not yet been run end-to-end and confirmed working by Workflow Vault's own testing. Read each step before running it, and treat this as a well-researched starting point rather than a guarantee.",
+  "glossary": [
+    {
+      "term": "n8n",
+      "definition": "n8n (pronounced \"n-eight-n\") is an open-source workflow automation tool. It lets you connect different apps and services together — for example, \"when a new row is added to this spreadsheet, send a Slack message\" — using a visual, drag-and-drop editor instead of writing a full program."
+    },
+    {
+      "term": "VPS (Virtual Private Server)",
+      "definition": "A VPS is a small computer that you rent from a hosting company. It runs continuously on the internet with its own IP address, so anything you install on it — like n8n — stays online even when your own laptop is switched off."
+    },
+    {
+      "term": "SSH",
+      "definition": "SSH (Secure Shell) is the standard way to remotely log into and control a VPS from a terminal on your own computer. You'll use an SSH command to connect to your server before you can type any commands on it."
+    },
+    {
+      "term": "Docker",
+      "definition": "Docker is a tool that packages an application together with everything it needs to run (code, system libraries, settings) into a single unit called a container. This means n8n will run the same way on your server as it does everywhere else, without you needing to manually install and configure it from scratch."
+    },
+    {
+      "term": "Container",
+      "definition": "A container is a single running instance of a packaged application (see Docker above). This guide runs two containers side by side on the same server: one for n8n, and one for Caddy."
+    },
+    {
+      "term": "Docker Compose",
+      "definition": "Docker Compose is a companion tool to Docker that lets you describe several containers — and how they connect to each other — in one plain-text file, then start (or stop) all of them together with a single command."
+    },
+    {
+      "term": "Caddy",
+      "definition": "Caddy is a web server. In this guide, its job is to sit in front of n8n, automatically obtain and renew a free HTTPS certificate, and forward incoming visitors to n8n — see \"reverse proxy\" below."
+    },
+    {
+      "term": "Reverse proxy",
+      "definition": "A reverse proxy is a service that receives incoming web traffic first and forwards it on to the right application behind the scenes. Here, Caddy is the reverse proxy: visitors connect to Caddy over HTTPS, and Caddy quietly forwards each request to n8n running in its own container."
+    },
+    {
+      "term": "Domain",
+      "definition": "A domain (like example.com) is the human-readable web address people type into a browser instead of a long string of numbers. You need to own one and point it at your VPS before HTTPS can work."
+    },
+    {
+      "term": "DNS",
+      "definition": "DNS (Domain Name System) is essentially the internet's phone book. Pointing your domain's \"A record\" at your VPS's IP address is how you tell DNS \"when someone visits this domain, send them to this server.\" Changes can take a little while to spread across the internet."
+    },
+    {
+      "term": "HTTPS",
+      "definition": "HTTPS is the secure, encrypted version of the HTTP protocol browsers use to load websites. It requires a small digital file called a certificate. Caddy requests and renews this certificate for you automatically, at no cost, via a service called Let's Encrypt."
+    },
+    {
+      "term": "Environment variable",
+      "definition": "An environment variable is a named setting passed to a container when it starts, instead of being hard-coded into the application itself. This guide uses environment variables to tell n8n what domain it's running on."
+    },
+    {
+      "term": "Port",
+      "definition": "A port is a numbered channel a server uses to separate different kinds of network traffic — for example, web traffic conventionally arrives on ports 80 (HTTP) and 443 (HTTPS). \"Opening a port\" in your firewall means allowing traffic through on that specific channel."
+    }
+  ],
   "prerequisites": [
-    "A VPS running Ubuntu 22.04 or later with at least 1GB RAM",
-    "A domain name pointed at the VPS's IP address",
-    "Docker and the Docker Compose plugin installed",
-    "Basic familiarity with the command line"
+    "[You'll need this already] A VPS running Ubuntu 22.04 or newer, with at least 1GB of RAM — rented from a provider such as Hetzner, DigitalOcean, Vultr, or Linode for roughly $4–6/month if you don't already have one. See the Glossary above for what a VPS is.",
+    "[You'll need this already] A domain name you own, with its DNS A record pointed at your VPS's public IP address. Domains typically cost $10–15/year from a registrar such as Namecheap, Porkbun, or Cloudflare Registrar. Point the A record before you start, since DNS changes can take time to take effect.",
+    "[You'll need this already] Basic comfort typing commands into a terminal and copy-pasting text. You do not need any prior experience with n8n, Docker, or Caddy specifically — every term used is explained in the Glossary above.",
+    "[This guide installs it for you] Docker and the Docker Compose plugin. You do NOT need these installed beforehand — Step 1 below installs both on your VPS.",
+    "[Optional, not required] An SSH key pair for logging into your VPS instead of a password. Most VPS providers let you add one when the server is created; it's a safer login method, but a password will also work for following this guide."
   ],
   "steps": [
     {
-      "title": "Provision the server",
-      "content": "SSH into a fresh Ubuntu VPS and install Docker and the Compose plugin.",
+      "title": "Connect to your server and install Docker",
+      "content": "First, open a terminal on your own computer and use SSH to log into your VPS, replacing YOUR_SERVER_IP with the IP address your provider gave you. Once you're connected, run the two commands below: the first downloads and runs Docker's official install script, and the second installs the Docker Compose plugin alongside it.",
+      "why": "n8n and Caddy will each run inside their own Docker container. Docker itself isn't installed on a fresh VPS by default, so it has to go on first, before anything else in this guide will work.",
+      "expectedResult": "After both commands finish, run `docker --version` and `docker compose version`. Each should print a version number (for example \"Docker version 26.x.x\"). If you instead see \"command not found,\" the install did not complete — re-run the install command and check your terminal output for errors before continuing.",
       "code": {
         "language": "bash",
-        "code": "curl -fsSL https://get.docker.com | sh\nsudo apt install -y docker-compose-plugin"
+        "code": "ssh root@YOUR_SERVER_IP\n\ncurl -fsSL https://get.docker.com | sh\nsudo apt install -y docker-compose-plugin"
       }
     },
     {
       "title": "Create the project directory",
-      "content": "Set up a folder to hold the Compose file and persistent volumes for n8n and Caddy.",
+      "content": "Create a folder to hold your configuration files, plus two subfolders where n8n and Caddy will save their persistent data (workflows, credentials, and the HTTPS certificate). Keeping this data outside the containers means it survives even if a container is later recreated or updated.",
+      "why": "Docker containers are disposable by design — if you rebuild or update one, anything saved only inside it is lost. Mounting these folders from the server's own disk into the containers is what makes your workflows permanent.",
+      "expectedResult": "Running `pwd` should show a path ending in /n8n-stack, and `ls` should list two empty folders: n8n_data and caddy_data.",
       "code": {
         "language": "bash",
         "code": "mkdir -p ~/n8n-stack/{n8n_data,caddy_data}\ncd ~/n8n-stack"
@@ -43,7 +104,9 @@
     },
     {
       "title": "Write the Compose file",
-      "content": "Define two services: n8n on an internal port, and Caddy as the reverse proxy handling TLS termination.",
+      "content": "Create a new file called docker-compose.yml in this folder (for example, run `nano docker-compose.yml` to open a simple text editor), then paste in the configuration below. It defines two services: n8n itself, and Caddy acting as the reverse proxy in front of it. Before saving, replace every instance of n8n.example.com with your own real domain name — the one you pointed at your VPS in the Prerequisites step.",
+      "why": "Docker Compose reads this one file to know which containers to start, how they're configured, and how their data folders connect to the ones you created in the previous step.",
+      "expectedResult": "After saving the file (in nano: Ctrl+O, then Enter, then Ctrl+X to exit), running `cat docker-compose.yml` should print back exactly what you pasted, with your own domain in place of n8n.example.com.",
       "code": {
         "language": "yaml",
         "code": "services:\n  n8n:\n    image: n8nio/n8n:latest\n    restart: unless-stopped\n    environment:\n      - N8N_HOST=n8n.example.com\n      - N8N_PROTOCOL=https\n      - WEBHOOK_URL=https://n8n.example.com/\n    volumes:\n      - ./n8n_data:/home/node/.n8n\n\n  caddy:\n    image: caddy:2\n    restart: unless-stopped\n    ports:\n      - \"80:80\"\n      - \"443:443\"\n    volumes:\n      - ./Caddyfile:/etc/caddy/Caddyfile\n      - ./caddy_data:/data"
@@ -51,7 +114,9 @@
     },
     {
       "title": "Configure Caddy",
-      "content": "Caddy handles certificate issuance and renewal automatically, so the config is a single reverse_proxy block.",
+      "content": "In the same folder, create a second file called Caddyfile (for example, `nano Caddyfile`) with the contents below — again replacing n8n.example.com with your actual domain. This tells Caddy which domain to serve and which internal address to forward traffic to.",
+      "why": "Caddy needs to know two things: what domain it's issuing an HTTPS certificate for, and where to send matching traffic. `reverse_proxy n8n:5678` forwards requests to the n8n container on port 5678, which is the port n8n listens on inside the container by default.",
+      "expectedResult": "Running `cat Caddyfile` should print your domain followed by the reverse_proxy line, with no typos in the domain name — a mismatched domain here is a common cause of certificate errors later.",
       "code": {
         "language": "text",
         "code": "n8n.example.com {\n  reverse_proxy n8n:5678\n}"
@@ -59,39 +124,52 @@
     },
     {
       "title": "Launch the stack",
-      "content": "Start both containers in the background. Caddy requests a Let's Encrypt certificate on first boot.",
+      "content": "Start both containers in the background with the command below. On first boot, Caddy will automatically contact Let's Encrypt and request a free HTTPS certificate for your domain — this usually takes a few seconds once your DNS is correctly pointed at the server.",
+      "why": "This is the step that actually brings your automation server online. Everything before this was preparation; `docker compose up -d` reads your docker-compose.yml and starts both services defined in it.",
+      "expectedResult": "Running `docker compose ps` afterward should list both the n8n and caddy containers with a status of \"Up\" or \"running.\" Then, open https://your-domain.com in a browser — you should see n8n's first-run screen asking you to create an owner account. If the page doesn't load, see the Troubleshooting section below before assuming something is broken.",
       "code": {
         "language": "bash",
-        "code": "docker compose up -d"
+        "code": "docker compose up -d\n\ndocker compose ps"
       }
     },
     {
       "title": "Verify persistence",
-      "content": "Restart the stack and confirm your workflows survive the restart, since they're stored in the mounted n8n_data volume rather than inside the container."
+      "content": "Log into n8n at your domain and create a simple test workflow (even a single empty node is enough), then save it. Restart the entire stack with the command below and confirm the workflow is still there afterward.",
+      "why": "This step exists purely to prove the setup is actually persistent — that your data lives in the n8n_data folder on the server's disk, not inside the disposable container — before you rely on it for anything real.",
+      "expectedResult": "After the restart finishes and both containers show \"Up\" again in `docker compose ps`, refreshing https://your-domain.com and logging back in should show the exact same test workflow you created, unchanged.",
+      "code": {
+        "language": "bash",
+        "code": "docker compose restart\n\ndocker compose ps"
+      }
     }
   ],
-  "architecture": "Traffic reaches Caddy on ports 80/443, which terminates TLS and proxies requests to n8n over the internal Docker network on port 5678. n8n's SQLite database and encryption key live in a bind-mounted volume, so the container can be recreated without losing workflows or credentials.",
-  "result": "A production n8n instance reachable at https://n8n.example.com with a valid, auto-renewing certificate, and workflow data that survives container updates and VPS reboots.",
+  "architecture": "Incoming traffic reaches Caddy first, on ports 80 and 443 (the standard ports for unencrypted and encrypted web traffic). Caddy terminates HTTPS — meaning it handles the encryption and certificate — then forwards each request over Docker's internal network to n8n, listening on port 5678 inside its own container. n8n's data (workflows, credentials, and its encryption key) lives in a folder mounted from the VPS's own disk rather than inside the container, so the container itself can be stopped, rebuilt, or updated without losing anything.",
+  "result": "A self-hosted n8n instance reachable at your own domain over HTTPS, with a certificate that renews itself automatically, and workflow data that survives container updates and server reboots. As noted above, this guide is unverified by Workflow Vault — treat the outcome as expected-but-not-yet-confirmed until you've run it yourself.",
   "troubleshooting": [
     {
       "issue": "n8n shows a 502 Bad Gateway right after deploying",
-      "cause": "Caddy started before n8n finished booting, so the reverse proxy target wasn't ready yet.",
-      "fix": "Restart just the Caddy service with `docker compose restart caddy` once n8n's logs show it's listening on port 5678."
+      "cause": "Caddy started before n8n had finished booting, so the reverse proxy's target wasn't ready to accept connections yet.",
+      "fix": "Wait about 30 seconds, then restart just the Caddy service with `docker compose restart caddy` once `docker compose logs n8n` shows it's listening on port 5678."
     },
     {
       "issue": "Webhook URLs return 404 from external services",
-      "cause": "The WEBHOOK_URL environment variable still points at localhost instead of the public domain.",
-      "fix": "Set WEBHOOK_URL=https://n8n.example.com/ in the Compose file and recreate the container."
+      "cause": "The WEBHOOK_URL environment variable in docker-compose.yml still points at the placeholder domain instead of your real one.",
+      "fix": "Edit docker-compose.yml, set WEBHOOK_URL=https://your-actual-domain.com/, then run `docker compose up -d` again to recreate the container with the new setting."
     },
     {
-      "issue": "Certificate never issues, Caddy logs show 'connection refused' on port 80",
-      "cause": "The VPS firewall or a cloud provider security group is blocking inbound traffic on port 80 or 443.",
-      "fix": "Open ports 80 and 443 in your provider's firewall rules, then restart Caddy."
+      "issue": "Certificate never issues, and Caddy's logs show \"connection refused\" on port 80",
+      "cause": "Your VPS provider's firewall (or a separate cloud security group setting) is blocking inbound traffic on port 80 or 443 before it even reaches Caddy.",
+      "fix": "Open ports 80 and 443 for inbound traffic in your provider's firewall settings, then run `docker compose restart caddy`."
+    },
+    {
+      "issue": "The site doesn't load at all, and the browser can't find the domain",
+      "cause": "DNS hasn't finished updating yet, or the A record wasn't pointed at the correct IP address.",
+      "fix": "Double-check the A record in your domain registrar's DNS settings against your VPS's actual IP address, then wait — propagation can take anywhere from a few minutes to about 48 hours."
     }
   ],
   "nextSteps": [
-    "Add a scheduled backup of the n8n_data volume to object storage.",
-    "Put n8n behind Cloudflare Access or Caddy basic auth for an extra login layer.",
-    "Wire up a Slack or email node so workflow failures notify you automatically."
+    "Add a scheduled backup of the n8n_data folder to off-server storage, so a lost or corrupted VPS doesn't mean lost workflows.",
+    "Put n8n behind an extra login layer, such as Caddy's built-in basic auth, for defense in depth beyond n8n's own login screen.",
+    "Wire up a Slack or email node inside n8n so workflow failures notify you automatically instead of failing silently."
   ]
 }
