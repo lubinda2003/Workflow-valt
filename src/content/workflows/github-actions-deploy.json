@@ -1,31 +1,44 @@
 {
   "slug": "github-actions-deploy",
   "title": "Zero-downtime deploy pipeline",
-  "description": "Trigger builds on push, run tests in parallel, and deploy to Cloudflare Pages automatically.",
+  "description": "Trigger builds on push, run tests, and deploy to Cloudflare Pages automatically with GitHub Actions.",
   "category": "GitHub Actions",
   "difficulty": "Intermediate",
-  "readingTime": "10 min",
+  "readingTime": "12 min",
   "featured": true,
-  "tags": [
-    "CI/CD",
-    "GitHub Actions",
-    "Cloudflare Pages"
-  ],
-  "tools": [
-    "GitHub Actions",
-    "Cloudflare Pages"
-  ],
+  "tags": ["CI/CD", "GitHub Actions", "Cloudflare Pages"],
+  "tools": ["GitHub Actions", "Cloudflare Pages"],
   "cover": "/images/workflows/github-actions-deploy.webp",
-  "overview": "A GitHub Actions pipeline that builds, tests, and deploys a static site to Cloudflare Pages on every push to main, with zero manual steps and no downtime during the swap.",
+  "overview": "This guide sets up a GitHub Actions workflow that automatically builds, tests, and deploys a static site to Cloudflare Pages every time you push to your main branch — no manual build-and-upload steps. Every technical term used along the way (workflow, runner, secret, and so on) is explained in the Glossary section below before it's used.",
+  "whatYoullBuild": "A GitHub Actions workflow file that watches your main branch, installs your project's dependencies, runs your test suite, and — only if the tests pass — publishes your build output to Cloudflare Pages using a securely stored API token. Once it's in place, shipping a change is just a normal git push.",
+  "beforeYouBegin": "Budget about 15–20 minutes: a few minutes to add the workflow file, plus however long it takes you to generate a Cloudflare API token and confirm your project's build/test commands actually work locally. There's no ongoing cost beyond what you already pay for GitHub and Cloudflare Pages (both are free for typical personal projects; GitHub Actions minutes and Cloudflare Pages both have generous free tiers). This guide has been written from technical documentation and general best practice, but — like every guide currently on Workflow Vault — it is UNVERIFIED: it has not yet been run end-to-end and confirmed working by Workflow Vault's own testing. Read each step before applying it, and treat this as a well-researched starting point rather than a guarantee.",
+  "glossary": [
+    {"term": "GitHub Actions", "definition": "GitHub Actions is GitHub's built-in automation system. You describe a series of steps in a file, and GitHub runs them automatically whenever something happens in your repository — for example, every time you push code."},
+    {"term": "Workflow", "definition": "A workflow is one automation recipe, written as a YAML file inside a .github/workflows folder in your repository. This guide creates a single workflow file that handles building, testing, and deploying."},
+    {"term": "YAML", "definition": "YAML is a plain-text format for writing structured configuration, using indentation instead of brackets or braces. GitHub Actions workflows are written in YAML, so indentation matters — copy the examples in this guide exactly."},
+    {"term": "Trigger", "definition": "A trigger is the event that causes a workflow to run. This guide's workflow is triggered by a push to the main branch, meaning it starts automatically every time new code lands there."},
+    {"term": "Job", "definition": "A job is a group of steps in a workflow that all run on the same machine, one after another. This guide uses a single job called deploy that does everything: install, build, test, and publish."},
+    {"term": "Runner", "definition": "A runner is the actual computer that executes your workflow's steps. This guide uses a GitHub-hosted runner (ubuntu-latest), meaning GitHub provisions a fresh Linux machine for each run and throws it away afterward — you don't manage or pay for a server yourself."},
+    {"term": "Action", "definition": "An action is a reusable, packaged step that someone else has already written, referenced with uses: in a workflow file — for example, actions/checkout, which downloads your repository's code onto the runner so later steps can work with it."},
+    {"term": "Secret", "definition": "A secret is a piece of sensitive configuration (like an API token) stored encrypted in your repository's settings rather than written directly into the workflow file. Workflows can read secrets at runtime, but they're never shown in logs or visible to anyone browsing the repository."},
+    {"term": "Cloudflare Pages", "definition": "Cloudflare Pages is a hosting service for static sites and front-end apps. This guide deploys a project's built output to Cloudflare Pages, which serves it from Cloudflare's global network."},
+    {"term": "Build output / build command", "definition": "Most front-end projects have a build command (commonly npm run build) that compiles source files into a folder of plain HTML, CSS, and JavaScript — the build output — that's actually safe to publish to the web. This guide assumes that folder is named dist, which is the default for many project types, but yours may use a different name."},
+    {"term": "npm ci", "definition": "npm ci installs a project's dependencies from its package-lock.json file exactly as recorded, rather than resolving newer versions the way a plain npm install might. It's the standard, more reliable choice for automated environments like CI."},
+    {"term": "CI/CD", "definition": "CI/CD stands for Continuous Integration / Continuous Deployment — the general practice of automatically building, testing, and shipping code on every change, instead of doing those steps by hand. This entire guide is one concrete example of a CI/CD pipeline."}
+  ],
   "prerequisites": [
-    "A GitHub repository connected to a Cloudflare Pages project",
-    "A Cloudflare API token with Pages edit permission",
-    "A Node.js project with a working build script"
+    "[You'll need this already] A GitHub repository containing a Node.js project with working build and test scripts defined in package.json (for example npm run build and npm test) — confirm both run successfully on your own machine before automating them.",
+    "[You'll need this already] A Cloudflare Pages project already created and connected to this repository, or at minimum a Cloudflare account where you can create one. This guide does not cover creating the Cloudflare Pages project itself, only automating deploys to it.",
+    "[You'll need this already] A Cloudflare API token with Pages edit permission, generated from your Cloudflare dashboard under My Profile, then API Tokens.",
+    "[You'll need this already] Comfort editing a plain-text YAML file and pushing commits to GitHub. You do not need prior experience with GitHub Actions specifically — every term used is explained in the Glossary above.",
+    "[Optional, not required] If your project doesn't have a test script yet, either add a minimal one before following this guide, or skip the 'Run tests before deploying' step below — running npm test with no test script configured will make the workflow fail."
   ],
   "steps": [
     {
       "title": "Create the workflow file",
-      "content": "Add a workflow under .github/workflows that triggers on pushes to main.",
+      "content": "In your repository, create a new file at .github/workflows/deploy.yml (GitHub automatically treats anything in that folder as a workflow). Paste in the starting configuration below: it names the workflow Deploy, sets it to trigger on every push to the main branch, and defines one job called deploy that runs on a fresh GitHub-hosted Linux machine. The first step inside that job checks out your repository's code so later steps have something to work with.",
+      "why": "Every workflow needs to declare what should trigger it and where its steps should run before it can do anything else. Triggering on pushes to main specifically — rather than every branch — means this pipeline only fires for code that's already been merged, not for work-in-progress branches.",
+      "expectedResult": "After committing this file and pushing it to GitHub, open the Actions tab in your repository. You should see a new workflow run start automatically, named Deploy, though it will currently do nothing beyond checking out the code since no further steps exist yet.",
       "code": {
         "language": "yaml",
         "code": "name: Deploy\n\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4"
@@ -33,7 +46,9 @@
     },
     {
       "title": "Install and build",
-      "content": "Cache dependencies, install them, and run the project's build command.",
+      "content": "Add the steps below underneath the checkout step in the same file. They install Node.js on the runner, cache npm's downloads so future runs are faster, install your project's exact dependencies with npm ci, and then run your project's build command.",
+      "why": "The runner starts as a bare machine with nothing installed — it needs Node.js added explicitly before npm ci or npm run build will work. Caching dependencies (cache: npm) doesn't change what gets installed, only how long it takes on repeat runs.",
+      "expectedResult": "Push this change and check the Actions tab again. The workflow run should now show green checkmarks next to a 'Set up Node' step and an 'npm ci' step, followed by your build command's own output — the same output you'd see running npm run build locally.",
       "code": {
         "language": "yaml",
         "code": "      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n          cache: npm\n      - run: npm ci\n      - run: npm run build"
@@ -41,47 +56,58 @@
     },
     {
       "title": "Run tests before deploying",
-      "content": "Fail the pipeline early if tests don't pass, so a broken build never reaches production.",
+      "content": "Add a single line under the build steps to run your test suite. If this step fails, every step after it is skipped automatically — including the deploy step you'll add next — so a broken build never reaches production.",
+      "why": "This is the entire point of putting tests in the pipeline instead of running them manually and remembering to deploy afterward: a failing test physically blocks the deploy step from running at all, rather than relying on you to notice and stop yourself.",
+      "expectedResult": "Push a change that would normally fail your tests (or check a previous run) and confirm the workflow stops at this step with a red X, and that no deploy step appears to have run afterward. Then confirm a normal, passing push proceeds past this step with a green checkmark.",
       "code": {
         "language": "yaml",
         "code": "      - run: npm test"
       }
     },
     {
+      "title": "Add the secrets",
+      "content": "Before wiring up the deploy step, store your Cloudflare credentials as repository secrets so they're never written in plain text anywhere in the workflow file. In your repository on GitHub, go to Settings, then Secrets and variables, then Actions, and add two new repository secrets: CF_API_TOKEN (the Cloudflare API token from the Prerequisites section) and CF_ACCOUNT_ID (found on the right-hand sidebar of your Cloudflare dashboard's overview page).",
+      "why": "The upcoming deploy step needs to authenticate with Cloudflare, but pasting a real API token directly into a workflow file would expose it to anyone who can read your repository. Secrets are encrypted and only decrypted at runtime, inside the workflow run itself.",
+      "expectedResult": "After saving both secrets, the Actions secrets page should list CF_API_TOKEN and CF_ACCOUNT_ID under 'Repository secrets,' each showing only its name and last-updated date — GitHub never displays a secret's actual value again once it's saved."
+    },
+    {
       "title": "Deploy to Cloudflare Pages",
-      "content": "Use Cloudflare's official action to publish the build output, authenticated with a scoped API token stored as a repo secret.",
+      "content": "Add the final step below, using Cloudflare's official pages-action to publish your build output. Replace my-site with your actual Cloudflare Pages project name, and replace dist with your build command's real output folder if it's named differently (check your project's build tool documentation if you're not sure).",
+      "why": "This step is what actually ships your site — everything before it was preparation. Cloudflare Pages performs an atomic swap when it receives the new build, meaning visitors are switched over to the new version all at once rather than seeing a half-updated site mid-deploy.",
+      "expectedResult": "After this step completes with a green checkmark, visit your Cloudflare Pages project's URL. It should reflect whatever change you just pushed. The Cloudflare Pages dashboard should also show a new deployment matching the commit you pushed.",
       "code": {
         "language": "yaml",
         "code": "      - uses: cloudflare/pages-action@v1\n        with:\n          apiToken: ${{ secrets.CF_API_TOKEN }}\n          accountId: ${{ secrets.CF_ACCOUNT_ID }}\n          projectName: my-site\n          directory: dist"
       }
-    },
-    {
-      "title": "Add the secrets",
-      "content": "Store the Cloudflare API token and account ID under repo Settings, then Secrets and variables, then Actions."
     }
   ],
-  "architecture": "A push to main triggers the workflow. GitHub-hosted runners install dependencies, build the project, and run the test suite in isolated steps that fail fast. Cloudflare Pages then receives the built directory and atomically swaps it into production, so visitors never see a half-deployed site.",
-  "result": "Every merge to main ships automatically: build, test, and deploy complete in under two minutes with no manual intervention and no downtime.",
+  "architecture": "A push to main triggers the workflow. A GitHub-hosted runner checks out the code, installs dependencies, builds the project, and runs the test suite in sequential steps — if any step fails, every step after it is skipped, so a broken build never reaches the deploy step. Only after tests pass does Cloudflare's official action authenticate with a repository secret and hand off the built directory, which Cloudflare Pages swaps into production atomically.",
+  "result": "A push to main automatically builds, tests, and deploys your site to Cloudflare Pages with no manual steps, typically finishing within a couple of minutes depending on your project's size. As noted above, this guide is unverified by Workflow Vault — treat the outcome as expected-but-not-yet-confirmed until you've run it yourself.",
   "troubleshooting": [
     {
-      "issue": "Deploy step fails with 'Authentication error'",
-      "cause": "The CF_API_TOKEN secret is missing, expired, or scoped to the wrong account.",
-      "fix": "Generate a new Cloudflare API token with Pages edit permission and update the repository secret."
+      "issue": "The 'Run tests before deploying' step fails immediately with something like 'missing script: test'",
+      "cause": "Your package.json doesn't define a test script, so npm test has nothing to run.",
+      "fix": "Add a test script to package.json (even a placeholder that just exits successfully, if you don't have real tests yet), or remove the 'npm test' step from the workflow entirely if you're not ready to test in CI."
     },
     {
-      "issue": "Build succeeds locally but fails in CI",
-      "cause": "package-lock.json is out of sync with package.json, and npm ci enforces an exact match between them.",
-      "fix": "Run npm install locally to refresh the lockfile, commit it, and push again."
+      "issue": "Deploy step fails with an authentication error",
+      "cause": "The CF_API_TOKEN secret is missing, misspelled, expired, or was generated without Pages edit permission.",
+      "fix": "Generate a new Cloudflare API token with Pages edit permission and update the CF_API_TOKEN repository secret, double-checking the secret's name matches exactly what the workflow file references."
     },
     {
-      "issue": "The deploy step runs but the live site doesn't update",
-      "cause": "The 'directory' input points at the wrong build output folder.",
-      "fix": "Confirm your build command's output folder (for example dist) matches the directory value in the pages-action step."
+      "issue": "Build succeeds locally but fails in the 'npm ci' step in CI",
+      "cause": "package-lock.json is out of sync with package.json, and npm ci enforces an exact match between them rather than resolving new versions like npm install would.",
+      "fix": "Run npm install locally to refresh the lockfile, commit the updated package-lock.json, and push again."
+    },
+    {
+      "issue": "The deploy step succeeds but the live site doesn't show the new content",
+      "cause": "The directory input in the deploy step points at the wrong output folder, so Cloudflare is publishing an empty or stale folder instead of your actual build.",
+      "fix": "Confirm your build command's real output folder name (check your build tool's documentation or run the build command locally and see what folder appears) and make sure it matches the directory value in the pages-action step exactly."
     }
   ],
   "nextSteps": [
-    "Add a preview deployment step for pull requests before merging to main.",
-    "Cache node_modules between runs to speed up the pipeline.",
-    "Add a Slack notification step that posts on deploy success or failure."
+    "Add a separate workflow that deploys pull requests to a preview URL before they're merged to main, so changes can be reviewed live before shipping.",
+    "Add caching for your project's other dependencies (not just npm's cache) if your build step is slow, to speed up repeated runs.",
+    "Add a notification step (for example, posting to Slack or email) that reports whether a deploy succeeded or failed, so you don't have to check the Actions tab manually."
   ]
 }
