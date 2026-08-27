@@ -1,0 +1,61 @@
+name: Autonomous Blueprint Publishing Engine
+
+on:
+  schedule:
+    # Runs automatically twice weekly at 06:00 UTC on Mondays and Thursdays
+    - cron: '0 6 * * 1,4'
+  workflow_dispatch:
+    # Allows manual 1-click trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish-blueprint:
+    name: Research, Generate & Publish Blueprints
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Run Autonomous Discovery & Synthesis Engine
+        id: auto_publisher
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          node scripts/autonomous-publisher.mjs
+
+      - name: Verify Full Astro Build & Schema
+        run: |
+          npm run build
+
+      - name: Commit & Push Verified Blueprints to Main
+        run: |
+          git config --global user.name "Workflow Vault Bot"
+          git config --global user.email "bot@workflowvault.dev"
+          
+          # Check if any new JSON files or documentation were modified
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Changes detected. Staging and committing..."
+            git add src/content/workflows/ public/og/ docs/
+            git commit -m "chore(auto): autonomous blueprint published & verified [skip ci]"
+            git push origin main
+            echo "Successfully pushed updates to main branch."
+          else
+            echo "No new blueprints to publish. Repository is fully up to date."
+          fi

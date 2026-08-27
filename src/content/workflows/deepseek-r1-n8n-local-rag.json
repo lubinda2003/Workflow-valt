@@ -1,0 +1,101 @@
+{
+  "slug": "deepseek-r1-n8n-local-rag",
+  "title": "Self-Hosted DeepSeek-R1 & Qdrant RAG Agent with n8n",
+  "description": "Run private local reasoning LLMs with DeepSeek-R1, vectorize company knowledge in Qdrant, and orchestrate intelligent autonomous search agents via n8n.",
+  "category": "AI & LLMs",
+  "difficulty": "Intermediate",
+  "readingTime": "22 min",
+  "featured": false,
+  "tags": [
+    "AI & LLMs",
+    "DeepSeek",
+    "n8n",
+    "RAG",
+    "Vector Search",
+    "Ollama"
+  ],
+  "tools": [
+    "DeepSeek-R1",
+    "n8n",
+    "Qdrant",
+    "Docker",
+    "Ollama"
+  ],
+  "overview": "This blueprint details how to build a 100% private, on-premise Retrieval-Augmented Generation (RAG) agent. It connects a local Ollama instance running DeepSeek-R1 (or Llama 3.3) with a self-hosted Qdrant vector database and n8n orchestration. No customer data or internal company documents ever leave your private server network.",
+  "whatYoullBuild": "A secure, containerized RAG pipeline running in Docker Compose. Incoming Slack or webhook queries are embedded via local fastembed, matched against semantic vectors in Qdrant, analyzed by DeepSeek-R1 with chain-of-thought reasoning, and delivered back with source citations.",
+  "beforeYouBegin": "This blueprint is autonomously synthesized and validated against Workflow Vault's Astro Content Collections schema. Review prerequisites and test against sandbox credentials prior to production deployment.",
+  "glossary": [
+    {
+      "term": "RAG (Retrieval-Augmented Generation)",
+      "definition": "An architecture where an LLM is provided with relevant factual context retrieved from a private database before generating an answer, preventing hallucinations."
+    },
+    {
+      "term": "DeepSeek-R1",
+      "definition": "An open-weights reasoning model that uses reinforcement learning to produce verifiable, step-by-step chain-of-thought logic before answering."
+    },
+    {
+      "term": "Qdrant",
+      "definition": "An open-source vector similarity search engine written in Rust, optimized for fast semantic filtering and payload storage."
+    },
+    {
+      "term": "Ollama",
+      "definition": "A lightweight CLI and API server that downloads, optimizes, and runs open-source language models locally on your GPU or CPU."
+    }
+  ],
+  "prerequisites": [
+    "[You'll need this already] A Linux server (VPS or local workstation) with at least 16 GB RAM (NVIDIA GPU recommended for sub-second inference, or modern CPU for 8B quantized models).",
+    "[You'll need this already] Docker Engine 24+ and Docker Compose v2 installed.",
+    "[You'll need this already] Basic familiarity with running shell commands over SSH.",
+    "[Optional, not required] Cloudflare Tunnel or Caddy if exposing the n8n webhook endpoint to external Slack/Discord bots."
+  ],
+  "steps": [
+    {
+      "title": "Step 1: Define the Unified Multi-Container Compose Stack",
+      "why": "Running n8n, Ollama, and Qdrant in the same Docker network provides high-speed internal socket communication and eliminates public exposure of the database.",
+      "content": "Create a dedicated directory `ai-rag-stack` and define `docker-compose.yml` declaring n8n, Ollama with GPU acceleration (or CPU fallback), and Qdrant storage.",
+      "code": {
+        "language": "yaml",
+        "code": "services:\n  ollama:\n    image: ollama/ollama:latest\n    container_name: ollama_llm\n    restart: unless-stopped\n    volumes:\n      - ollama_data:/root/.ollama\n    ports:\n      - \"127.0.0.1:11434:11434\"\n\n  qdrant:\n    image: qdrant/qdrant:latest\n    container_name: qdrant_db\n    restart: unless-stopped\n    ports:\n      - \"127.0.0.1:6333:6333\"\n    volumes:\n      - qdrant_data:/qdrant/storage\n\n  n8n:\n    image: n8nio/n8n:latest\n    container_name: n8n_rag_engine\n    restart: unless-stopped\n    ports:\n      - \"127.0.0.1:5678:5678\"\n    environment:\n      - N8N_HOST=localhost\n      - N8N_PORT=5678\n      - N8N_PROTOCOL=http\n      - WEBHOOK_URL=http://localhost:5678/\n    volumes:\n      - n8n_data:/home/node/.n8n\n    depends_on:\n      - ollama\n      - qdrant\n\nvolumes:\n  ollama_data:\n  qdrant_data:\n  n8n_data:"
+      },
+      "expectedResult": "All 3 containers start cleanly without port conflicts."
+    },
+    {
+      "title": "Step 2: Pull the DeepSeek-R1 Model & Embedding Model",
+      "why": "The LLM needs weights downloaded to disk before the n8n agent node can establish inference sessions.",
+      "content": "Execute the Ollama CLI inside the running container to pull the quantized reasoning model and a high-speed embedding model.",
+      "code": {
+        "language": "bash",
+        "code": "# Pull DeepSeek-R1 (8B distilled reasoning model)\ndocker exec -it ollama_llm ollama run deepseek-r1:8b\n\n# Pull high-performance BGE embedding model for vector indexing\ndocker exec -it ollama_llm ollama pull bge-m3"
+      },
+      "expectedResult": "Ollama downloads model weights and responds with a success status."
+    },
+    {
+      "title": "Step 3: Configure the n8n RAG Chain & Vector Store Connector",
+      "why": "Connecting the vector retriever node to Ollama ensures n8n queries Qdrant first, injects relevant document chunks into memory, and passes the augmented prompt to DeepSeek-R1.",
+      "content": "Open n8n at `http://localhost:5678`, add an `AI Agent` node, configure `Ollama Chat Model` (Host: `http://ollama:11434`, Model: `deepseek-r1:8b`), attach the `Qdrant Vector Store` tool, and set top-k retrieval to 4.",
+      "code": {
+        "language": "json",
+        "code": "{\n  \"nodes\": [\n    {\n      \"name\": \"Ollama DeepSeek-R1\",\n      \"type\": \"@n8n/n8n-nodes-langchain.lmChatOllama\",\n      \"parameters\": {\n        \"model\": \"deepseek-r1:8b\",\n        \"baseURL\": \"http://ollama:11434\"\n      }\n    },\n    {\n      \"name\": \"Qdrant Vector Store\",\n      \"type\": \"@n8n/n8n-nodes-langchain.vectorStoreQdrant\",\n      \"parameters\": {\n        \"qdrantUrl\": \"http://qdrant:6333\",\n        \"collectionName\": \"company_docs\"\n      }\n    }\n  ]\n}"
+      },
+      "expectedResult": "n8n verifies the connection to both internal containers."
+    }
+  ],
+  "architecture": "Webhook / Slack Trigger -> n8n AI Agent Node -> Ollama (DeepSeek-R1 Reasoner) <-> Qdrant Vector DB (Dense Embeddings) -> Synthesized Response with Citations",
+  "result": "A private, zero-subscription RAG pipeline processing sensitive queries locally with step-by-step reasoning and semantic document retrieval.",
+  "troubleshooting": [
+    {
+      "issue": "Ollama returns HTTP 500 or out-of-memory error",
+      "cause": "The selected model size exceeds available system RAM or VRAM.",
+      "fix": "Switch to a smaller quantized model such as deepseek-r1:1.5b or allocate swap space on Linux (`sudo fallocate -l 8G /swapfile`)."
+    },
+    {
+      "issue": "n8n cannot connect to http://ollama:11434",
+      "cause": "Docker containers are running on separate bridge networks or using localhost instead of container hostnames.",
+      "fix": "Use the internal Docker service name `http://ollama:11434` rather than `http://localhost:11434` inside n8n."
+    }
+  ],
+  "nextSteps": [
+    "Add automated document ingestion triggers from Google Drive or local folders",
+    "Set up systemd auto-restart on host reboot"
+  ]
+}

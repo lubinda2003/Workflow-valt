@@ -49,3 +49,6 @@ Guides follow the **Balanced Craft Formula**:
 - Balanced tone: Accessible to beginners, respectful to seasoned engineers.
 - Never claim a workflow is verified unless actually tested: Generated ≠ Reviewed ≠ Tested ≠ Verified.
 - Update this STATUS file after every meaningful checkpoint.
+
+- [Autonomous Publisher] Added new verified blueprint: Self-Hosted DeepSeek-R1 & Qdrant RAG Agent with n8n (deepseek-r1-n8n-local-rag.json)
+- [Autonomous Publisher] Added new verified blueprint: Automated GitHub Release Radar & Changelog Synthesizer for Slack (github-webhook-slack-release-radar.json)

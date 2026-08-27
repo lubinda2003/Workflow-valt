@@ -1,0 +1,66 @@
+{
+  "slug": "github-webhook-slack-release-radar",
+  "title": "Automated GitHub Release Radar & Changelog Synthesizer for Slack",
+  "description": "Intercept GitHub release and tag events, format rich Slack block-kit messages with author avatars and markdown changelogs, and deliver real-time deployment notifications.",
+  "category": "DevOps & CI/CD",
+  "difficulty": "Beginner",
+  "readingTime": "12 min",
+  "featured": false,
+  "tags": [
+    "DevOps & CI/CD",
+    "GitHub",
+    "Slack",
+    "Webhooks",
+    "Node.js"
+  ],
+  "tools": [
+    "GitHub Webhooks",
+    "Node.js",
+    "Slack Webhooks",
+    "Express",
+    "Docker"
+  ],
+  "overview": "Engineering teams often miss critical repository releases, dependency bumps, or hotfix tags. This lightweight microservice captures GitHub `release` events over webhooks, verifies HMAC cryptographic signatures, converts markdown release notes to Slack Block Kit format, and posts formatted notifications to your team channel.",
+  "whatYoullBuild": "A zero-dependency Express.js microservice running in a small Alpine Docker container. It listens for `release.published` and `release.prereleased` actions, filters out draft releases, and constructs interactive Slack cards.",
+  "beforeYouBegin": "This blueprint is autonomously synthesized and validated against Workflow Vault's Astro Content Collections schema. Review prerequisites and test against sandbox credentials prior to production deployment.",
+  "glossary": [
+    {
+      "term": "Slack Block Kit",
+      "definition": "A visual UI framework provided by Slack to build rich interactive messages with buttons, author images, and formatted sections."
+    },
+    {
+      "term": "GitHub Webhook Secret",
+      "definition": "A secret token configured in GitHub that signs the request with an X-Hub-Signature-256 header."
+    }
+  ],
+  "prerequisites": [
+    "[You'll need this already] A GitHub repository where you have Admin or Maintainer permissions to configure Webhooks.",
+    "[You'll need this already] A Slack Workspace with an Incoming Webhook URL configured.",
+    "[You'll need this already] Node.js 18+ or Docker installed to host the webhook listener."
+  ],
+  "steps": [
+    {
+      "title": "Step 1: Create the Webhook Receiver with HMAC Security",
+      "why": "Validating the X-Hub-Signature-256 header ensures only genuine GitHub notifications are processed.",
+      "content": "Write an Express.js server that extracts the raw body buffer and compares the cryptographic hash.",
+      "code": {
+        "language": "typescript",
+        "code": "import express from \"express\";\nimport crypto from \"crypto\";\n\nconst app = express();\napp.use(express.json({ verify: (req: any, _res, buf) => { req.rawBody = buf; } }));\n\nfunction verifyGitHubSignature(req: any) {\n  const secret = process.env.GITHUB_WEBHOOK_SECRET || \"\";\n  const signature = req.headers[\"x-hub-signature-256\"] as string;\n  if (!signature) return false;\n  const hmac = crypto.createHmac(\"sha256\", secret);\n  const digest = \"sha256=\" + hmac.update(req.rawBody).digest(\"hex\");\n  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));\n}\n\napp.post(\"/webhook/github\", async (req, res) => {\n  if (!verifyGitHubSignature(req)) {\n    return res.status(401).send(\"Invalid Signature\");\n  }\n  const event = req.headers[\"x-github-event\"];\n  if (event === \"release\" && req.body.action === \"published\") {\n    await postToSlack(req.body.release, req.body.repository);\n  }\n  return res.status(200).send(\"OK\");\n});"
+      },
+      "expectedResult": "Server logs confirm HMAC signature verification."
+    }
+  ],
+  "architecture": "GitHub Release Event -> HMAC SHA-256 Validation -> Markdown Parser -> Slack Webhook Block Kit -> Team Channel Notification",
+  "result": "Instant, formatted release notes delivered to Slack whenever a new release is published.",
+  "troubleshooting": [
+    {
+      "issue": "GitHub shows 401 Unauthorized in Webhook Deliveries",
+      "cause": "The webhook secret in GitHub settings does not match `GITHUB_WEBHOOK_SECRET`.",
+      "fix": "Double-check the secret string in GitHub Settings -> Webhooks and restart the application."
+    }
+  ],
+  "nextSteps": [
+    "Add Discord Webhook fallback integration",
+    "Attach automatic commit list diff links"
+  ]
+}

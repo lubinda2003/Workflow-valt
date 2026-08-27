@@ -1,0 +1,418 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import CodeBlock from "../components/content/CodeBlock.astro";
+
+const docsSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "name": "Autonomous Publishing Engine & CI/CD Pipeline Setup — Workflow Vault",
+    "description": "Comprehensive documentation on how Workflow Vault autonomously researches, synthesizes, tests, and publishes blueprints via GitHub Actions."
+  }
+];
+---
+
+<BaseLayout
+  title="Autonomous Publishing Pipeline Setup — Workflow Vault"
+  description="How Workflow Vault autonomously researches, validates, and deploys production blueprints using GitHub Actions and Gemini AI."
+  schema={docsSchema}
+>
+
+<Header />
+
+<main class="pipeline-docs">
+  <div class="container">
+    
+    <div class="docs-header">
+      <div class="section-tag">
+        <span class="tag-dot"></span>
+        <span>AUTONOMOUS CI/CD ARCHITECTURE</span>
+      </div>
+      <h1>Self-Updating Publishing Engine</h1>
+      <p class="subtitle">
+        Workflow Vault is designed to operate on complete autopilot. The GitHub Action runner acts as an autonomous technical researcher, compiler, QA gatekeeper, and publisher.
+      </p>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="card arch-card">
+      <div class="arch-title">
+        <span class="pulse-dot"></span>
+        <span>AUTONOMOUS LIFECYCLE TOPOLOGY</span>
+      </div>
+      <div class="arch-flow">
+        <div class="arch-box">
+          <strong>1. Scheduled Trigger</strong>
+          <p>Cron runs twice weekly (or 1-click manual trigger)</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box highlight">
+          <strong>2. AI Topic Research</strong>
+          <p>Gemini 2.5 Flash queries trending tech + schema fallback</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box">
+          <strong>3. QA &amp; Astro Build</strong>
+          <p>Strict schema check + static compilation test</p>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box">
+          <strong>4. Commit to Main</strong>
+          <p>Auto-commits &amp; triggers live host deployment</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step by Step Setup Guide -->
+    <section class="setup-section">
+      <h2>1. How to Enable Live AI Generation (2 Minutes)</h2>
+      <p>
+        To allow the runner to autonomously research new technologies and write complete code blueprints, add your API key in GitHub Secrets:
+      </p>
+
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <strong>Get a Free Gemini API Key</strong>
+            <p>Generate an API key with zero subscription cost at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <strong>Add Repository Secret in GitHub</strong>
+            <p>In your GitHub repository (<code>lubinda2003/Workflow-valt</code>):</p>
+            <p>Go to <strong>Settings</strong> &rarr; <strong>Secrets and variables</strong> &rarr; <strong>Actions</strong> &rarr; Click <strong>New repository secret</strong>.</p>
+            <div class="secret-table">
+              <div class="secret-row">
+                <span class="secret-key">GEMINI_API_KEY</span>
+                <span class="secret-desc">Your Google AI Studio Gemini API key (enables dynamic live research).</span>
+              </div>
+              <div class="secret-row">
+                <span class="secret-key">DISCORD_WEBHOOK_URL</span>
+                <span class="secret-desc">(Optional) Discord or Slack channel webhook for instant release alerts.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <strong>Enable Workflow Write Permissions</strong>
+            <p>Go to <strong>Settings</strong> &rarr; <strong>Actions</strong> &rarr; <strong>General</strong>.</p>
+            <p>Scroll down to <strong>Workflow permissions</strong> and select <strong>"Read and write permissions"</strong> so GitHub Actions can push verified updates directly to <code>main</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testing & Triggering -->
+    <section class="setup-section">
+      <h2>2. Automated Asset &amp; OpenGraph Generation (Puppeteer &amp; Playwright)</h2>
+      <p>
+        The pipeline includes an autonomous graphics engine in <code>scripts/autonomous-asset-engine.mjs</code>. When a new workflow is synthesized:
+      </p>
+      <div class="card asset-explainer-card">
+        <ul class="clean-bullet-list">
+          <li><strong>Zero-Dependency Vector Generation</strong>: Instantly compiles high-contrast, resolution-independent SVG social previews and schematic architecture diagrams into <code>public/og/[slug].svg</code>.</li>
+          <li><strong>Headless Browser Support</strong>: If Playwright or Puppeteer is added to your GitHub runner (<code>npx playwright install</code>), the pipeline automatically takes pixel-perfect 1200x630 PNG snapshots during release.</li>
+          <li><strong>Automatic Git Staging</strong>: All generated visual assets are automatically committed to the repository alongside the workflow JSON.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Testing & Triggering -->
+    <section class="setup-section">
+      <h2>3. How to Test &amp; Trigger the Pipeline</h2>
+      <p>You can run the publishing engine manually at any time without waiting for the scheduled cron:</p>
+
+      <div class="grid grid-2">
+        <div class="card trigger-card">
+          <h3>Option A: 1-Click Trigger on GitHub</h3>
+          <ol class="ordered-list">
+            <li>Go to the <strong>Actions</strong> tab in your GitHub repository.</li>
+            <li>Click <strong>Autonomous Blueprint Publishing Engine</strong> in the left sidebar.</li>
+            <li>Click <strong>Run workflow</strong> &rarr; Select branch <code>main</code> &rarr; Click <strong>Run workflow</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="card trigger-card">
+          <h3>Option B: Run Locally via CLI</h3>
+          <p class="card-p">You can test the engine locally on your machine before pushing:</p>
+          <CodeBlock
+            code={`# Test with live Gemini AI\nGEMINI_API_KEY="your-key-here" npm run auto:publish\n\n# Or test with curated fallback registry\nnpm run auto:publish`}
+            language="bash"
+          />
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<Footer />
+
+</BaseLayout>
+
+<style>
+  .pipeline-docs {
+    padding: 3.5rem 0 5rem;
+  }
+
+  .docs-header {
+    margin-bottom: 2.5rem;
+    max-width: 780px;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .docs-header h1 {
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.03em;
+  }
+
+  .subtitle {
+    font-size: var(--fs-md);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Arch Card */
+  .arch-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 3.5rem;
+  }
+
+  .arch-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .arch-box {
+    flex: 1;
+    min-width: 170px;
+    padding: 1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+  }
+
+  .arch-box.highlight {
+    border-color: var(--accent);
+    background: rgba(249, 115, 22, 0.08);
+  }
+
+  .arch-box strong {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+
+  .arch-box p {
+    font-size: var(--fs-2xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .arch-arrow {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    color: var(--text-subtle);
+  }
+
+  @media (max-width: 768px) {
+    .arch-arrow {
+      display: none;
+    }
+    .arch-flow {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  /* Setup Sections */
+  .setup-section {
+    margin-bottom: 3.5rem;
+  }
+
+  .setup-section h2 {
+    font-size: var(--fs-xl);
+    margin-bottom: 0.5rem;
+  }
+
+  .setup-section > p {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin-bottom: 1.75rem;
+  }
+
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .step-item {
+    display: flex;
+    gap: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+  }
+
+  .step-badge {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-content {
+    flex: 1;
+  }
+
+  .step-content strong {
+    display: block;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    margin-bottom: 0.35rem;
+  }
+
+  .step-content p {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.5;
+  }
+
+  .step-content a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .secret-table {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .secret-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface-2);
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .secret-key {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 180px;
+  }
+
+  .secret-desc {
+    font-size: var(--fs-2xs);
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 640px) {
+    .secret-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
+    }
+  }
+
+  .trigger-card {
+    padding: 1.5rem;
+  }
+
+  .trigger-card h3 {
+    font-size: var(--fs-sm);
+    margin-bottom: 0.75rem;
+  }
+
+  .card-p {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .ordered-list {
+    padding-left: 1.2rem;
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .ordered-list li {
+    margin-bottom: 0.4rem;
+  }
+</style>
