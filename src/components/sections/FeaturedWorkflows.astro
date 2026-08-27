@@ -1,153 +1,146 @@
 ---
-const workflows = [
-  {
-    tool: "n8n",
-    tag: "Self-Hosted",
-    title: "Self-host n8n with Docker + Caddy",
-    description: "A production n8n stack with automatic HTTPS and persistent workflow storage on a $5 VPS.",
-    href: "/workflows/n8n-docker-caddy",
-  },
-  {
-    tool: "GitHub Actions",
-    tag: "CI/CD",
-    title: "Zero-downtime deploy pipeline",
-    description: "Trigger builds on push, run tests in parallel, and deploy to Cloudflare Pages automatically.",
-    href: "/workflows/github-actions-deploy",
-  },
-  {
-    tool: "Cloudflare Workers",
-    tag: "Edge",
-    title: "Rate-limited API proxy at the edge",
-    description: "Use Workers KV and Durable Objects to throttle requests before they reach your origin.",
-    href: "/workflows/cloudflare-rate-limit",
-  },
-  {
-    tool: "Claude + Notion",
-    tag: "AI Agent",
-    title: "Auto-summarize meeting notes into Notion",
-    description: "Pipe transcripts through Claude and push structured summaries straight into a Notion database.",
-    href: "/workflows/claude-notion-summaries",
-  },
-  {
-    tool: "Zapier",
-    tag: "No-Code",
-    title: "When to graduate from Zapier",
-    description: "A practical checklist for migrating high-volume Zaps to n8n or Workers before the bill spikes.",
-    href: "/workflows/zapier-migration",
-  },
-  {
-    tool: "Google Sheets",
-    tag: "OCR",
-    title: "OCR receipts straight into a spreadsheet",
-    description: "Scan receipts, extract line items with OCR, and log them to Google Sheets automatically.",
-    href: "/workflows/ocr-receipts-sheets",
-  },
-];
+import { getAllWorkflows } from "../../lib/workflows.js";
+import WorkflowCard from "../content/WorkflowCard.astro";
+
+const allWorkflows = await getAllWorkflows();
+const featuredWorkflows = allWorkflows.slice(0, 3);
+const totalCount = allWorkflows.length;
 ---
 
 <section class="featured">
   <div class="container">
-    <div class="heading">
-      <p class="eyebrow">Featured Workflows</p>
-      <h2>Guides people actually ship</h2>
-      <p class="subtitle">Hand-picked workflow guides across the automation stacks builders use most.</p>
+    <div class="heading-row">
+      <div class="heading">
+        <div class="section-tag">
+          <span class="tag-dot"></span>
+          <span>CURATED ARCHITECTURES</span>
+        </div>
+        <h2>Featured Workflows</h2>
+        <p class="subtitle">Self-contained production automation guides with source files, schemas, and live setup.</p>
+      </div>
+
+      <a href="/workflows" class="view-all-btn">
+        <span>Browse all {totalCount} blueprints</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </a>
     </div>
 
     <div class="grid workflows-grid">
-      {workflows.map((w) => (
-        <a href={w.href} class="card workflow-card">
-          <div class="card-top">
-            <span class="tool">{w.tool}</span>
-            <span class="tag">{w.tag}</span>
-          </div>
-          <h3>{w.title}</h3>
-          <p>{w.description}</p>
-          <span class="link">View guide &rarr;</span>
-        </a>
+      {featuredWorkflows.map((w) => (
+        <div class="workflow-card-wrapper">
+          <WorkflowCard
+            slug={w.slug}
+            title={w.title}
+            description={w.description}
+            category={w.category}
+            difficulty={w.difficulty}
+            readingTime={w.readingTime}
+            tools={w.tools || []}
+            cover={w.cover}
+          />
+        </div>
       ))}
     </div>
   </div>
 </section>
 
 <style>
-  .heading {
-    max-width: 640px;
-    margin-bottom: var(--space-6);
+  .featured {
+    padding: 3.5rem 0;
+    border-top: 1px solid var(--border-subtle);
   }
 
-  .eyebrow {
-    color: var(--accent);
+  .heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .heading {
+    max-width: 600px;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: .15em;
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .heading h2 {
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
   }
 
   .subtitle {
-    margin-top: var(--space-2);
+    margin-top: 0.5rem;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .view-all-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    color: var(--text);
+    transform: translateX(2px);
   }
 
   .workflows-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
   }
 
-  .workflow-card {
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-4);
-    border-radius: 20px;
+  .workflow-card-wrapper {
+    height: 100%;
   }
 
-  .card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-2);
-  }
-
-  .tool {
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-  }
-
-  .tag {
-    font-size: var(--fs-xs);
-    padding: .3rem .7rem;
-    border-radius: 999px;
-    background: rgba(255, 107, 0, .12);
-    color: var(--accent);
-  }
-
-  .workflow-card h3 {
-    font-size: 1.15rem;
-    margin-bottom: var(--space-1);
-  }
-
-  .workflow-card p {
-    font-size: var(--fs-sm);
-    flex-grow: 1;
-  }
-
-  .link {
-    margin-top: var(--space-3);
-    color: var(--accent);
-    font-weight: 600;
-    font-size: var(--fs-sm);
-  }
-
-  @media (max-width: 900px) {
-    .workflows-grid {
-      grid-template-columns: 1fr 1fr;
+  @media (max-width: 768px) {
+    .featured {
+      padding: 2.5rem 0;
     }
-  }
 
-  @media (max-width: 600px) {
+    .heading-row {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
     .workflows-grid {
       grid-template-columns: 1fr;
+      gap: 1.25rem;
     }
   }
 </style>
+

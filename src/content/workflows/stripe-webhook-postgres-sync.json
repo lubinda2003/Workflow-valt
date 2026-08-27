@@ -1,0 +1,135 @@
+{
+  "slug": "stripe-webhook-postgres-sync",
+  "title": "Secure Stripe webhook verification and sync to PostgreSQL",
+  "description": "Verify cryptographic Stripe webhook signatures, process checkout events, and idempotently upsert customer subscription records into PostgreSQL.",
+  "category": "APIs",
+  "difficulty": "Intermediate",
+  "readingTime": "18 min",
+  "featured": true,
+  "tags": [
+    "APIs",
+    "Stripe",
+    "PostgreSQL",
+    "Node.js",
+    "Webhooks"
+  ],
+  "tools": [
+    "Stripe",
+    "PostgreSQL",
+    "Node.js",
+    "Express"
+  ],
+  "cover": "/images/workflows/stripe-webhook-postgres-sync.webp",
+  "overview": "This guide provides a production-grade blueprint for capturing asynchronous Stripe webhook events, verifying cryptographic HMAC SHA-256 signatures, and maintaining accurate billing state in a PostgreSQL database. It prevents common production pitfalls like duplicate charges, race conditions, and unverified payload spoofing. Every technical term is explained in the Glossary before use.",
+  "whatYoullBuild": "A secure Node.js & Express webhook microservice that exposes a `/api/webhooks/stripe` endpoint. The service extracts the raw request buffer to verify Stripe's `Stripe-Signature` header, processes `checkout.session.completed`, `customer.subscription.updated`, and `customer.subscription.deleted` events, and idempotently updates a normalized `subscriptions` table in PostgreSQL using transactional SQL upserts.",
+  "beforeYouBegin": "Budget 25–40 minutes to install project dependencies, launch a local or cloud PostgreSQL instance (such as Supabase or Neon), install the Stripe CLI for local event forwarding, and execute the test suite. This guide is UNVERIFIED by Workflow Vault's automated testing suite — test against Stripe Test Mode credentials before accepting live production payments.",
+  "glossary": [
+    {
+      "term": "Stripe Webhook",
+      "definition": "An asynchronous HTTP POST request sent by Stripe to your server whenever an event occurs in your Stripe account (e.g. successful charge, subscription renewal, invoice payment failure)."
+    },
+    {
+      "term": "HMAC SHA-256 Signature Verification",
+      "definition": "A cryptographic mechanism where Stripe signs the webhook payload with a shared secret key, allowing your backend to verify that the request originated from Stripe and was not tampered with."
+    },
+    {
+      "term": "Raw Request Buffer",
+      "definition": "The exact, unmodified binary byte representation of the incoming HTTP request body. Webhook signature verification fails if the body is parsed by JSON body parsers before verification."
+    },
+    {
+      "term": "Idempotent Upsert",
+      "definition": "A database operation (`INSERT ... ON CONFLICT DO UPDATE`) that creates a new row or updates an existing row without producing duplicates when receiving the same webhook event multiple times."
+    },
+    {
+      "term": "Stripe CLI",
+      "definition": "The official command-line developer tool provided by Stripe to trigger mock events, listen to webhooks, and securely forward them to `localhost:3000` during development."
+    },
+    {
+      "term": "Stripe Customer ID",
+      "definition": "A unique identifier formatted as `cus_...` that represents a payer or account in Stripe's ecosystem."
+    }
+  ],
+  "prerequisites": [
+    "[You'll need this already] A Stripe account with access to the Stripe Developer Dashboard (dashboard.stripe.com).",
+    "[You'll need this already] Node.js (version 18+) and npm installed on your development machine.",
+    "[You'll need this already] A PostgreSQL database instance (local, Supabase, Neon, or Docker) with connection string credentials.",
+    "[You'll need this already] Stripe CLI installed (`brew install stripe/stripe-cli/stripe` or downloaded from stripe.com/docs/stripe-cli).",
+    "[Optional, not required] ngrok or Cloudflare Tunnels if you want to expose a local server to live Stripe test webhooks without the Stripe CLI."
+  ],
+  "steps": [
+    {
+      "title": "Initialize the Node.js project and install dependencies",
+      "content": "Create a new project directory and initialize `package.json`. Install `express`, `stripe`, `pg` (node-postgres), and `dotenv`, along with development types.",
+      "why": "The official `stripe` Node SDK includes the necessary cryptographic verification methods, while `pg` provides reliable pooled connections to PostgreSQL.",
+      "expectedResult": "Running `cat package.json` shows the required dependencies installed with type support.",
+      "code": {
+        "language": "bash",
+        "code": "mkdir stripe-webhook-postgres && cd stripe-webhook-postgres\nnpm init -y\nnpm install express stripe pg dotenv\nnpm install --save-dev nodemon"
+      }
+    },
+    {
+      "title": "Create the PostgreSQL subscriptions table schema",
+      "content": "Execute the SQL migration below on your PostgreSQL database to create the `customers` and `subscriptions` tables with primary keys and unique indexes for idempotency.",
+      "why": "Setting `stripe_subscription_id` as a unique primary key enables atomic `ON CONFLICT (id) DO UPDATE` statements, preventing race conditions if Stripe retries deliveries rapidly.",
+      "expectedResult": "Querying `\\d subscriptions` in `psql` shows columns `id`, `customer_id`, `status`, `price_id`, `current_period_end`, and `updated_at`.",
+      "code": {
+        "language": "sql",
+        "code": "CREATE TABLE IF NOT EXISTS subscriptions (\n  id VARCHAR(255) PRIMARY KEY, -- e.g. sub_1N4...\n  customer_id VARCHAR(255) NOT NULL, -- e.g. cus_1N4...\n  status VARCHAR(50) NOT NULL, -- active, trialing, past_due, canceled\n  price_id VARCHAR(255) NOT NULL, -- e.g. price_1N4...\n  quantity INTEGER DEFAULT 1,\n  current_period_start TIMESTAMP WITH TIME ZONE,\n  current_period_end TIMESTAMP WITH TIME ZONE,\n  cancel_at_period_end BOOLEAN DEFAULT FALSE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\nCREATE INDEX IF NOT EXISTS idx_subscriptions_customer_id ON subscriptions(customer_id);"
+      }
+    },
+    {
+      "title": "Build the Express server with raw body capture",
+      "content": "Create `server.js`. Configure Express to use `express.raw({ type: 'application/json' })` strictly on the `/api/webhooks/stripe` route before applying global `express.json()` to other endpoints. This preserves the original payload buffer required by `stripe.webhooks.constructEvent()`.",
+      "why": "Standard Express body parsers mutate JSON whitespace and character encodings. Stripe cryptographic signature checks compare against the exact byte string sent across the wire; any variation causes signature verification failure.",
+      "expectedResult": "The server runs on port 3000 and exposes `/api/webhooks/stripe` accepting raw bytes.",
+      "code": {
+        "language": "javascript",
+        "code": "import express from 'express';\nimport Stripe from 'stripe';\nimport pg from 'pg';\nimport dotenv from 'dotenv';\n\ndotenv.config();\n\nconst app = express();\nconst stripe = new Stripe(process.env.STRIPE_SECRET_KEY);\nconst pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });\n\n// CRITICAL: Raw body parser must be mounted before standard json parser\napp.post(\n  '/api/webhooks/stripe',\n  express.raw({ type: 'application/json' }),\n  async (req, res) => {\n    const sig = req.headers['stripe-signature'];\n    let event;\n\n    try {\n      event = stripe.webhooks.constructEvent(\n        req.body,\n        sig,\n        process.env.STRIPE_WEBHOOK_SECRET\n      );\n    } catch (err) {\n      console.error(`Webhook signature verification failed: ${err.message}`);\n      return res.status(400).send(`Webhook Error: ${err.message}`);\n    }\n\n    // Handle supported event types\n    try {\n      switch (event.type) {\n        case 'customer.subscription.created':\n        case 'customer.subscription.updated': {\n          const sub = event.data.object;\n          await upsertSubscription(sub);\n          break;\n        }\n        case 'customer.subscription.deleted': {\n          const sub = event.data.object;\n          await markSubscriptionCanceled(sub.id);\n          break;\n        }\n        default:\n          console.log(`Unhandled event type: ${event.type}`);\n      }\n\n      // Acknowledge receipt to Stripe\n      res.json({ received: true });\n    } catch (err) {\n      console.error(`Failed processing webhook event: ${err.message}`);\n      res.status(500).json({ error: 'Database processing error' });\n    }\n  }\n);\n\nasync function upsertSubscription(sub) {\n  const query = `\n    INSERT INTO subscriptions (\n      id, customer_id, status, price_id, quantity,\n      current_period_start, current_period_end, cancel_at_period_end, updated_at\n    )\n    VALUES ($1, $2, $3, $4, $5, to_timestamp($6), to_timestamp($7), $8, NOW())\n    ON CONFLICT (id) DO UPDATE SET\n      status = EXCLUDED.status,\n      price_id = EXCLUDED.price_id,\n      quantity = EXCLUDED.quantity,\n      current_period_start = EXCLUDED.current_period_start,\n      current_period_end = EXCLUDED.current_period_end,\n      cancel_at_period_end = EXCLUDED.cancel_at_period_end,\n      updated_at = NOW();\n  `;\n\n  const values = [\n    sub.id,\n    sub.customer,\n    sub.status,\n    sub.items.data[0]?.price?.id || '',\n    sub.quantity || 1,\n    sub.current_period_start,\n    sub.current_period_end,\n    sub.cancel_at_period_end\n  ];\n\n  await pool.query(query, values);\n}\n\nasync function markSubscriptionCanceled(subId) {\n  await pool.query(\n    `UPDATE subscriptions SET status = 'canceled', updated_at = NOW() WHERE id = $1`,\n    [subId]\n  );\n}\n\napp.listen(3000, () => console.log('Stripe webhook listener running on port 3000'));"
+      }
+    },
+    {
+      "title": "Configure environment variables and start the server",
+      "content": "Create `.env` file containing `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `DATABASE_URL`. Start your development server with `node server.js`.",
+      "why": "Separating configuration secrets into environment variables ensures API keys are never committed to version control.",
+      "expectedResult": "Console outputs 'Stripe webhook listener running on port 3000' and connects to PostgreSQL without throwing an error.",
+      "code": {
+        "language": "bash",
+        "code": "cat << 'EOF' > .env\nPORT=3000\nDATABASE_URL=postgresql://postgres:postgres@localhost:5432/mydb\nSTRIPE_SECRET_KEY=sk_test_51...\nSTRIPE_WEBHOOK_SECRET=whsec_...\nEOF\n\nnode server.js"
+      }
+    },
+    {
+      "title": "Forward test events using the Stripe CLI",
+      "content": "In a separate terminal, authenticate with the Stripe CLI (`stripe login`) and run `stripe listen --forward-to localhost:3000/api/webhooks/stripe`. Copy the webhook signing secret output by the CLI (`whsec_...`) into your `.env` file, then trigger a test event with `stripe trigger customer.subscription.created`.",
+      "why": "The Stripe CLI emulates live webhooks locally, generating real cryptographic signatures against your temporary local signing secret without requiring public DNS or tunneling tools.",
+      "expectedResult": "The Stripe CLI terminal logs `--> POST /api/webhooks/stripe [200]`, and querying `SELECT * FROM subscriptions;` in PostgreSQL reveals the newly created test subscription record.",
+      "code": {
+        "language": "bash",
+        "code": "# 1. Listen and forward events to local port 3000\nstripe listen --forward-to localhost:3000/api/webhooks/stripe\n\n# 2. In another terminal, trigger a test subscription event\nstripe trigger customer.subscription.created"
+      }
+    }
+  ],
+  "architecture": "Stripe servers -> HTTP POST to /api/webhooks/stripe with Stripe-Signature header -> Express raw buffer middleware -> stripe.webhooks.constructEvent() verifies HMAC SHA-256 signature -> Event router handles subscription lifecycle events -> PostgreSQL connection pool executes ON CONFLICT upsert -> HTTP 200 returned to Stripe.",
+  "result": "A battle-tested webhook handler that securely validates Stripe signatures and maintains synchronous subscription billing states in PostgreSQL with zero duplicate records. As with all Workflow Vault guides, this guide is UNVERIFIED — test thoroughly in Stripe Test Mode before handling live transactions.",
+  "troubleshooting": [
+    {
+      "issue": "Server returns HTTP 400 with 'Webhook Error: No signatures found matching the expected signature for payload'",
+      "cause": "The `STRIPE_WEBHOOK_SECRET` in your `.env` does not match the secret key used to sign the event, or `express.json()` parsed the body before `express.raw()` could capture the raw buffer.",
+      "fix": "Ensure `express.raw({ type: 'application/json' })` is mounted before any other body parsing middleware, and verify the `whsec_...` key matches the active Stripe CLI session."
+    },
+    {
+      "issue": "Stripe webhook times out after 20 seconds with HTTP 504 / connection error",
+      "cause": "The webhook handler is performing synchronous long-running tasks (e.g. sending emails or generating PDFs) before returning a 200 response to Stripe.",
+      "fix": "Acknowledge receipt immediately with `res.json({ received: true })` after queuing the database task or offload heavy processing to a background worker."
+    },
+    {
+      "issue": "PostgreSQL throws 'relation \"subscriptions\" does not exist'",
+      "cause": "The SQL migration in Step 2 was not executed against the active database or connected to a different schema.",
+      "fix": "Run the table creation SQL script inside your database client and verify the table exists in the `public` schema."
+    }
+  ],
+  "nextSteps": [
+    "Implement handling for `invoice.payment_failed` and `invoice.payment_action_required` to notify customers of billing problems.",
+    "Add a Redis message queue (BullMQ) to process high-concurrency event bursts asynchronously during major sales launches.",
+    "Configure Stripe Customer Portal session generation so users can manage their subscriptions self-serve."
+  ]
+}

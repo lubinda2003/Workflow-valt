@@ -17,13 +17,31 @@ const { title, description, category, difficulty, readingTime, tools, whatYoullB
 
 <header class="workflow-header">
   <div class="container">
-    <a href="/workflows" class="back">&larr; All workflows</a>
+    <div class="header-nav-bar">
+      <a href="/workflows" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>All Workflows</span>
+      </a>
+      <span class="nav-slash">/</span>
+      <span class="nav-current">{category}</span>
+    </div>
 
     <div class="meta-top">
-      <span class="category">{category}</span>
+      <div class="category-badge">
+        <span class="cat-dot"></span>
+        <span>{category}</span>
+      </div>
       <div class="badges">
-        <Badge label={difficulty} tone="accent" />
-        <Badge label={`${readingTime} read`} tone="muted" />
+        <Badge label={difficulty} tone="auto" />
+        <span class="read-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>{readingTime} READ</span>
+        </span>
       </div>
     </div>
 
@@ -32,31 +50,60 @@ const { title, description, category, difficulty, readingTime, tools, whatYoullB
 
     {whatYoullBuild && (
       <div class="build-callout">
-        <span class="build-label">What you'll build</span>
+        <div class="build-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span class="build-label">Target Architecture</span>
+        </div>
         <p>{whatYoullBuild}</p>
       </div>
     )}
 
-    <ToolList tools={tools} />
+    <div class="tools-wrapper">
+      <span class="tools-lead">INTEGRATED RUNTIMES:</span>
+      <ToolList tools={tools} />
+    </div>
   </div>
 </header>
 
 <style>
   .workflow-header {
-    padding: var(--space-6) 0 var(--space-5);
+    padding: 3rem 0 2.5rem;
     border-bottom: 1px solid var(--border);
+    background: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 60%);
   }
 
-  .back {
-    display: inline-block;
+  .header-nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--text-subtle);
+    margin-bottom: 1.5rem;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--text-muted);
-    font-size: var(--fs-sm);
-    margin-bottom: var(--space-4);
+    text-decoration: none;
     transition: var(--transition);
   }
 
-  .back:hover {
+  .back-link:hover {
     color: var(--text);
+  }
+
+  .nav-slash {
+    color: var(--border-strong);
+  }
+
+  .nav-current {
+    color: var(--accent);
   }
 
   .meta-top {
@@ -64,56 +111,115 @@ const { title, description, category, difficulty, readingTime, tools, whatYoullB
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
-  .category {
-    font-size: var(--fs-xs);
+  .category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    color: var(--text-muted);
+    font-family: var(--font-mono);
+    color: var(--text);
     text-transform: uppercase;
-    letter-spacing: .08em;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.6rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+  }
+
+  .cat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
   }
 
   .badges {
     display: flex;
-    gap: .5rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .read-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 0.2rem 0.55rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
   }
 
   h1 {
-    font-size: clamp(2.25rem, 5vw, 3.5rem);
-    max-width: 800px;
-    margin-bottom: var(--space-3);
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    max-width: 860px;
+    margin-bottom: 1rem;
   }
 
   .description {
-    max-width: 640px;
-    font-size: var(--fs-md);
-    margin-bottom: var(--space-4);
+    max-width: 720px;
+    font-size: clamp(1rem, 2vw, 1.125rem);
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
   }
 
   .build-callout {
-    max-width: 640px;
-    padding: var(--space-3);
-    margin-bottom: var(--space-4);
-    border: 1px solid var(--accent);
+    max-width: 720px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--accent-border);
     border-radius: var(--radius-sm);
     background: var(--accent-soft);
+    box-shadow: var(--specular);
+  }
+
+  .build-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .build-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .build-callout p {
     margin: 0;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    color: var(--text);
+    line-height: 1.55;
   }
 
-  .build-label {
-    display: block;
-    font-size: var(--fs-xs);
+  .tools-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .tools-lead {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--accent);
-    margin-bottom: .4rem;
+    color: var(--text-subtle);
+    letter-spacing: 0.08em;
   }
 </style>

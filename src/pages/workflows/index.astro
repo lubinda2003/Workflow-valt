@@ -4,13 +4,53 @@ import Header from "../../components/layout/Header.astro";
 import Footer from "../../components/layout/Footer.astro";
 import WorkflowCard from "../../components/content/WorkflowCard.astro";
 import { getAllWorkflows } from "../../lib/workflows.js";
+import { getAllCategories } from "../../lib/categories.js";
+import { DIFFICULTY_LEVELS } from "../../data/difficultyLevels.js";
 
 const workflows = await getAllWorkflows();
+const categories = (await getAllCategories()).sort((a, b) => a.name.localeCompare(b.name));
+
+const workflowsSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://workflowvault.dev"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Workflows",
+        "item": "https://workflowvault.dev/workflows"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "All AI Automation Workflows & Blueprints",
+    "description": "Browse every automation workflow guide in the vault, built for production use.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": workflows.map((w, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "url": `https://workflowvault.dev/workflows/${w.slug}`,
+        "name": w.title
+      }))
+    }
+  }
+];
 ---
 
 <BaseLayout
-  title="Workflows — Workflow Vault"
-  description="Browse every automation workflow guide in the vault, built for production use."
+  title="All Automation Workflows & Guides — Workflow Vault"
+  description="Browse production-ready AI automation workflow guides across n8n, Cloudflare Workers, Make, GitHub Actions, and Claude."
+  schema={workflowsSchema}
 >
 
 <Header />
@@ -18,25 +58,54 @@ const workflows = await getAllWorkflows();
 <main>
   <section class="workflows-index">
     <div class="container">
-      <div class="heading">
-        <p class="eyebrow">All Workflows</p>
-        <h1>Browse the vault</h1>
-        <p class="subtitle">{workflows.length} in-depth automation guides across n8n, Zapier, GitHub Actions, Cloudflare Workers, and more — built for production use.</p>
+      <div class="heading-row">
+        <div class="heading">
+          <p class="eyebrow">All Workflows</p>
+          <h1>Browse the vault</h1>
+          <p class="subtitle">{workflows.length} in-depth automation guides across n8n, Zapier, GitHub Actions, Cloudflare Workers, and more — built for production use.</p>
+        </div>
+        <div class="search-link-box">
+          <a href="/search" class="search-quick-btn">
+            <span class="search-icon">&#x1F50D;</span>
+            <span>Advanced Search & Filters</span>
+          </a>
+        </div>
       </div>
 
-      <div class="grid workflows-grid">
+      <div class="filter-toolbar">
+        <div class="category-chips" id="category-chips">
+          <button class="cat-chip active" data-category="all">All ({workflows.length})</button>
+          {categories.map((cat) => {
+            const count = workflows.filter((w) => w.category === cat.name).length;
+            return (
+              <button class="cat-chip" data-category={cat.name}>
+                {cat.name} {count > 0 && <span class="chip-count">({count})</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div class="grid workflows-grid" id="workflows-grid">
         {workflows.map((workflow) => (
-          <WorkflowCard
-            slug={workflow.slug}
-            title={workflow.title}
-            description={workflow.description}
-            category={workflow.category}
-            difficulty={workflow.difficulty}
-            readingTime={workflow.readingTime}
-            tools={workflow.tools}
-            cover={workflow.cover}
-          />
+          <div class="workflow-card-wrapper" data-category={workflow.category} data-difficulty={workflow.difficulty}>
+            <WorkflowCard
+              slug={workflow.slug}
+              title={workflow.title}
+              description={workflow.description}
+              category={workflow.category}
+              difficulty={workflow.difficulty}
+              readingTime={workflow.readingTime}
+              tools={workflow.tools}
+              cover={workflow.cover}
+            />
+          </div>
         ))}
+      </div>
+
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <p>No workflows currently found in this category.</p>
+        <button class="button" id="reset-filter-btn">View all workflows</button>
       </div>
     </div>
   </section>
@@ -46,42 +115,186 @@ const workflows = await getAllWorkflows();
 
 </BaseLayout>
 
+<script>
+  const chips = document.querySelectorAll(".cat-chip");
+  const cards = document.querySelectorAll(".workflow-card-wrapper");
+  const emptyState = document.getElementById("empty-state");
+  const resetBtn = document.getElementById("reset-filter-btn");
+
+  function setCategoryFilter(category) {
+    let visible = 0;
+
+    chips.forEach((chip) => {
+      if (chip.dataset.category === category) {
+        chip.classList.add("active");
+      } else {
+        chip.classList.remove("active");
+      }
+    });
+
+    cards.forEach((card) => {
+      const match = category === "all" || card.dataset.category === category;
+      card.style.display = match ? "" : "none";
+      if (match) visible++;
+    });
+
+    if (emptyState) {
+      emptyState.style.display = visible === 0 ? "flex" : "none";
+    }
+  }
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const cat = chip.dataset.category || "all";
+      setCategoryFilter(cat);
+    });
+  });
+
+  resetBtn?.addEventListener("click", () => {
+    setCategoryFilter("all");
+  });
+</script>
+
 <style>
+  .workflows-index {
+    padding: 3.5rem 0 4.5rem;
+  }
+
+  .heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
   .heading {
-    max-width: 640px;
-    margin-bottom: var(--space-6);
+    max-width: 620px;
   }
 
   .heading h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
   }
 
   .eyebrow {
     color: var(--accent);
     font-weight: 700;
-    letter-spacing: .15em;
+    letter-spacing: 0.12em;
     font-size: var(--fs-xs);
     text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    margin-bottom: 0.5rem;
   }
 
   .subtitle {
-    margin-top: var(--space-2);
+    margin-top: 0.5rem;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .search-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    transition: var(--transition);
+  }
+
+  .search-quick-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .search-icon {
+    font-size: 0.9rem;
+  }
+
+  .filter-toolbar {
+    margin-bottom: 2.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .cat-chip {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .cat-chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .cat-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .chip-count {
+    opacity: 0.8;
+    font-size: 0.85em;
   }
 
   .workflows-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
   }
 
-  @media (max-width: 900px) {
-    .workflows-grid {
-      grid-template-columns: 1fr 1fr;
+  .workflow-card-wrapper {
+    height: 100%;
+  }
+
+  .empty-state {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 1rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .workflows-index {
+      padding: 2.5rem 0 3.5rem;
     }
-  }
 
-  @media (max-width: 600px) {
+    .heading-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.25rem;
+    }
+
     .workflows-grid {
       grid-template-columns: 1fr;
+      gap: 1.25rem;
     }
   }
 </style>
+

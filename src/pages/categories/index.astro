@@ -5,11 +5,48 @@ import Footer from "../../components/layout/Footer.astro";
 import { getAllCategories } from "../../lib/categories.js";
 
 const categories = await getAllCategories();
+
+const categoriesSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://workflowvault.dev"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Categories",
+        "item": "https://workflowvault.dev/categories"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Automation Categories & Technology Stacks",
+    "description": "Browse every automation category in the vault, from AI agents to edge APIs and webhooks.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": categories.map((c, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "url": `https://workflowvault.dev/categories/${c.slug}`,
+        "name": c.name
+      }))
+    }
+  }
+];
 ---
 
 <BaseLayout
-  title="Categories — Workflow Vault"
-  description="Browse every automation category in the vault, from AI agents to edge APIs."
+  title="All Automation Stacks & Categories — Workflow Vault"
+  description="Browse all 8 automation categories in the vault: AI Agents, Cloudflare Workers, GitHub Actions, n8n, Make, and more."
+  schema={categoriesSchema}
 >
 
 <Header />
@@ -41,65 +78,92 @@ const categories = await getAllCategories();
 </BaseLayout>
 
 <style>
+  .categories-index {
+    padding: 3.5rem 0 4.5rem;
+  }
+
   .heading {
-    max-width: 640px;
-    margin-bottom: var(--space-6);
+    max-width: 620px;
+    margin-bottom: 2.5rem;
   }
 
   .heading h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
   }
 
   .eyebrow {
     color: var(--accent);
     font-weight: 700;
-    letter-spacing: .15em;
+    letter-spacing: 0.12em;
     font-size: var(--fs-xs);
     text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    margin-bottom: 0.5rem;
   }
 
   .subtitle {
-    margin-top: var(--space-2);
+    margin-top: 0.5rem;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: 1.6;
+    color: var(--text-muted);
   }
 
   .categories-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
   }
 
   .category-card {
     display: flex;
     flex-direction: column;
-    padding: var(--space-4);
-    border-radius: 20px;
+    padding: 1.4rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    height: 100%;
+    transition: var(--transition);
+  }
+
+  .category-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
   }
 
   .category-card h3 {
-    font-size: 1.15rem;
-    margin-bottom: var(--space-1);
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
   }
 
   .category-card p {
     font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--text-muted);
     flex-grow: 1;
   }
 
   .link {
-    margin-top: var(--space-3);
+    margin-top: 1.25rem;
     color: var(--accent);
     font-weight: 600;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
 
-  @media (max-width: 900px) {
-    .categories-grid {
-      grid-template-columns: 1fr 1fr;
+  @media (max-width: 768px) {
+    .categories-index {
+      padding: 2.5rem 0 3.5rem;
     }
-  }
 
-  @media (max-width: 600px) {
     .categories-grid {
       grid-template-columns: 1fr;
+      gap: 1.15rem;
+    }
+
+    .category-card {
+      padding: 1.2rem;
     }
   }
 </style>

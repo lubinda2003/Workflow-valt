@@ -1,0 +1,420 @@
+---
+export interface Props {
+  category?: string;
+  tools?: string[];
+}
+
+const { category = "General", tools = [] } = Astro.props;
+
+const isServerless = tools.some(t => t.toLowerCase().includes("worker") || t.toLowerCase().includes("action"));
+const isSelfHosted = tools.some(t => t.toLowerCase().includes("n8n") || t.toLowerCase().includes("docker") || t.toLowerCase().includes("postgres"));
+---
+
+<div class="hosting-guide-card" id="hosting-options">
+  <div class="hosting-header">
+    <div class="hosting-title-group">
+      <div class="hosting-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+      </div>
+      <div>
+        <h3 class="hosting-heading">Where should you run this automation?</h3>
+        <p class="hosting-sub">Don't have 24/7 hardware at home? Choose the setup that fits your budget and technical comfort.</p>
+      </div>
+    </div>
+    <span class="hosting-pill">Hardware &amp; Cloud Guide</span>
+  </div>
+
+  <div class="hosting-tabs">
+    <button class="tab-btn active" data-tab="vps">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+      </svg>
+      <span>Cloud VPS (24/7 Webhooks)</span>
+      <span class="tab-badge">Most Popular</span>
+    </button>
+    <button class="tab-btn" data-tab="local">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      <span>Local Hardware (Free / Hobby)</span>
+    </button>
+    <button class="tab-btn" data-tab="managed">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <span>1-Click Managed Cloud</span>
+    </button>
+  </div>
+
+  <div class="tab-panels">
+    <!-- Panel 1: Cloud VPS -->
+    <div class="tab-panel active" id="panel-vps">
+      <div class="panel-grid">
+        <div class="panel-main">
+          <h4>Best for Freelancers, Agencies, and 24/7 Client Pipelines</h4>
+          <p>
+            If you don't have a dedicated server running at home, a <strong>Virtual Private Server (VPS)</strong> gives you a dedicated Linux server in the cloud that stays online 24/7 even when your personal laptop is closed.
+          </p>
+          <ul class="benefit-list">
+            <li><strong>Cost:</strong> ~$4 to $6 / month (predictable flat fee, no per-execution surprises).</li>
+            <li><strong>Providers:</strong> Hetzner Cloud, DigitalOcean, Linode / Akamai, Railway, or OVH.</li>
+            <li><strong>Key advantage:</strong> You get a permanent public IP address and free SSL certificates, which are essential for receiving incoming Stripe, Airtable, or GitHub webhooks reliably.</li>
+          </ul>
+          <div class="quick-command-box">
+            <span class="cmd-label">Quick 1-liner to install Docker on any Ubuntu/Debian VPS:</span>
+            <code>curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker $USER</code>
+          </div>
+        </div>
+        <div class="panel-sidebar">
+          <div class="recom-card">
+            <span class="recom-tag">RECOMMENDED SPECS</span>
+            <div class="spec-row">
+              <span>RAM:</span> <strong>1GB – 2GB</strong>
+            </div>
+            <div class="spec-row">
+              <span>vCPU:</span> <strong>1 Core</strong>
+            </div>
+            <div class="spec-row">
+              <span>Storage:</span> <strong>20GB SSD</strong>
+            </div>
+            <div class="spec-row">
+              <span>Uptime:</span> <strong>99.9%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Local Hardware -->
+    <div class="tab-panel" id="panel-local">
+      <div class="panel-grid">
+        <div class="panel-main">
+          <h4>Best for Hobbyists, Testing &amp; Zero-Cost Experimentation</h4>
+          <p>
+            You can run this automation completely free on your everyday computer (Mac, Windows, or Linux) or on low-cost home hardware like a <strong>Raspberry Pi 4/5</strong> or repurposed mini PC.
+          </p>
+          <ul class="benefit-list">
+            <li><strong>Cost:</strong> $0 / month (100% free).</li>
+            <li><strong>Software needed:</strong> Docker Desktop (free for personal use) or native Node.js / Python.</li>
+            <li><strong>Consideration:</strong> Automations will only execute while your computer is powered on and awake. To receive incoming webhooks locally, use tools like <code>ngrok</code> or <code>Cloudflare Tunnels</code> for secure local tunneling.</li>
+          </ul>
+        </div>
+        <div class="panel-sidebar">
+          <div class="recom-card">
+            <span class="recom-tag">LOCAL CHECKLIST</span>
+            <div class="spec-row">
+              <span>Docker Desktop:</span> <strong>Installed</strong>
+            </div>
+            <div class="spec-row">
+              <span>RAM Overhead:</span> <strong>~400MB</strong>
+            </div>
+            <div class="spec-row">
+              <span>Webhooks:</span> <strong>Tunnel required</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Managed Cloud -->
+    <div class="tab-panel" id="panel-managed">
+      <div class="panel-grid">
+        <div class="panel-main">
+          <h4>Best for Zero-Maintenance 1-Click Operations</h4>
+          <p>
+            If you don't want to manage Docker containers or terminal commands, you can run automations directly on managed serverless platforms or official SaaS plans:
+          </p>
+          <ul class="benefit-list">
+            <li><strong>Cloudflare Workers:</strong> Free tier includes 100,000 requests per day with 0ms cold starts.</li>
+            <li><strong>n8n Cloud / Make / Zapier:</strong> Fully managed hosted platforms with automated backups and visual scenario builders.</li>
+            <li><strong>Railway / Render:</strong> 1-click Git container deploys with auto-healing and managed PostgreSQL databases.</li>
+          </ul>
+        </div>
+        <div class="panel-sidebar">
+          <div class="recom-card">
+            <span class="recom-tag">SERVERLESS TIERS</span>
+            <div class="spec-row">
+              <span>Cloudflare:</span> <strong>100k req/day free</strong>
+            </div>
+            <div class="spec-row">
+              <span>GitHub CI:</span> <strong>2,000 min/mo free</strong>
+            </div>
+            <div class="spec-row">
+              <span>Maintenance:</span> <strong>Zero OS updates</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupHostingTabs() {
+    const card = document.getElementById("hosting-options");
+    if (!card) return;
+
+    const tabButtons = card.querySelectorAll<HTMLButtonElement>(".tab-btn");
+    const tabPanels = card.querySelectorAll<HTMLElement>(".tab-panel");
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetTab = btn.getAttribute("data-tab");
+        if (!targetTab) return;
+
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        tabPanels.forEach((p) => p.classList.remove("active"));
+
+        btn.classList.add("active");
+        const targetPanel = card.querySelector<HTMLElement>(`#panel-${targetTab}`);
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
+  setupHostingTabs();
+  document.addEventListener("astro:page-load", setupHostingTabs);
+</script>
+
+<style>
+  .hosting-guide-card {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hosting-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1.25rem;
+  }
+
+  .hosting-title-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .hosting-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .hosting-heading {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.25rem;
+  }
+
+  .hosting-sub {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .hosting-pill {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .hosting-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
+  .tab-btn.active {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-soft);
+  }
+
+  .tab-badge {
+    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .panel-main h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+  }
+
+  .panel-main p {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 0.85rem;
+  }
+
+  .benefit-list {
+    margin: 0 0 1rem;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .benefit-list strong {
+    color: var(--text);
+  }
+
+  .quick-command-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 0.75rem 0.9rem;
+  }
+
+  .cmd-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    color: var(--text-subtle);
+    margin-bottom: 0.35rem;
+  }
+
+  .quick-command-box code {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    word-break: break-all;
+  }
+
+  .panel-sidebar {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .recom-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .recom-tag {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+  }
+
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .spec-row strong {
+    color: var(--text);
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 768px) {
+    .panel-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hosting-header {
+      flex-direction: column;
+    }
+  }
+</style>

@@ -8,10 +8,12 @@ const { terms } = Astro.props;
 
 {terms.length > 0 && (
   <div class="glossary">
-    <dl>
+    <dl class="glossary-grid">
       {terms.map((entry) => (
         <div class="glossary-item">
-          <dt>{entry.term}</dt>
+          <dt>
+            <span class="glossary-term-badge">{entry.term}</span>
+          </dt>
           <dd>{entry.definition}</dd>
         </div>
       ))}
@@ -20,29 +22,43 @@ const { terms } = Astro.props;
 )}
 
 <style>
-  .glossary dl {
+  .glossary-grid {
     display: grid;
-    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
     margin: 0;
+    padding: 0;
   }
 
   .glossary-item {
-    padding: var(--space-3);
+    padding: 1rem 1.25rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--surface);
+    transition: var(--transition);
+  }
+
+  .glossary-item:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
   }
 
   .glossary-item dt {
+    margin-bottom: 0.45rem;
+  }
+
+  .glossary-term-badge {
+    font-family: var(--font-mono);
     font-weight: 700;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     color: var(--accent);
-    margin-bottom: .3rem;
+    letter-spacing: 0.02em;
   }
 
   .glossary-item dd {
     margin: 0;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     color: var(--text-muted);
+    line-height: 1.6;
   }
 </style>

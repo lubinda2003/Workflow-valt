@@ -23,11 +23,54 @@ export async function getStaticPaths() {
 }
 
 const { category, workflows } = Astro.props;
+
+const categorySchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://workflowvault.dev"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Categories",
+        "item": "https://workflowvault.dev/categories"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": category.name,
+        "item": `https://workflowvault.dev/categories/${category.slug}`
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `${category.name} Automation Workflows`,
+    "description": category.description,
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": workflows.map((w, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "url": `https://workflowvault.dev/workflows/${w.slug}`,
+        "name": w.title
+      }))
+    }
+  }
+];
 ---
 
 <BaseLayout
-  title={`${category.name} — Workflow Vault`}
+  title={`${category.name} Automation Workflows — Workflow Vault`}
   description={category.description}
+  schema={categorySchema}
 >
 
 <Header />

@@ -4,28 +4,23 @@ import Header from "../components/layout/Header.astro";
 import Hero from "../components/sections/Hero.astro";
 import FeaturedWorkflows from "../components/sections/FeaturedWorkflows.astro";
 import Categories from "../components/sections/Categories.astro";
-import Features from "../components/sections/Features.astro";
-import CTA from "../components/sections/CTA.astro";
 import Footer from "../components/layout/Footer.astro";
 ---
 
 <BaseLayout
-  title="Workflow Vault"
-  description="Practical, production-focused AI automation guides."
+  title="Workflow Vault — Production AI Automation Blueprints"
+  description="Practical, production-focused AI automation guides, edge worker templates, and webhook pipelines."
 >
 
 <Header />
 
-<Hero />
-
-<FeaturedWorkflows />
-
-<Categories />
-
-<Features />
-
-<CTA />
+<main>
+  <Hero />
+  <FeaturedWorkflows />
+  <Categories />
+</main>
 
 <Footer />
 
 </BaseLayout>
+

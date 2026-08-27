@@ -3,26 +3,30 @@ const year = new Date().getFullYear();
 
 const columns = [
   {
-    heading: "Product",
+    heading: "Blueprints",
     links: [
-      { label: "Workflows", href: "/workflows" },
-      { label: "Categories", href: "/categories" },
+      { label: "All Workflows", href: "/workflows" },
+      { label: "Stacks & Categories", href: "/categories" },
+      { label: "Instant Search", href: "/search" },
     ],
   },
   {
-    heading: "Resources",
+    heading: "Builders",
     links: [
-      { label: "About", href: "/about" },
-      { label: "GitHub", href: "https://github.com/lubinda2003/Workflow-valt" },
+      { label: "Stack Configurator", href: "/builder" },
+      { label: "Code & Resources", href: "/resources" },
+      { label: "Contribute Blueprint", href: "/contribute" },
+      { label: "Mission & Standards", href: "/about" },
+      { label: "GitHub Repository", href: "https://github.com/lubinda2003/Workflow-valt" },
     ],
   },
   {
-    heading: "Stack",
+    heading: "Ecosystem",
     links: [
-      { label: "n8n", href: "/categories/n8n" },
-      { label: "Make", href: "/categories/make" },
-      { label: "Zapier", href: "/categories/zapier" },
-      { label: "GitHub Actions", href: "/categories/github-actions" },
+      { label: "n8n Automation", href: "/categories/n8n" },
+      { label: "AI Agents", href: "/categories/ai-agents" },
+      { label: "Cloudflare Workers", href: "/categories/cloudflare-workers" },
+      { label: "GitHub Actions CI", href: "/categories/github-actions" },
     ],
   },
 ];
@@ -32,8 +36,21 @@ const columns = [
   <div class="container">
     <div class="footer-top">
       <div class="brand">
-        <p class="logo">Workflow<span>Vault</span></p>
-        <p class="tagline">Production-focused automation guides for developers, freelancers, and agencies.</p>
+        <a href="/" class="logo">
+          <div class="logo-mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <span class="logo-text">Workflow<span class="logo-accent">Vault</span></span>
+        </a>
+        <p class="tagline">Production-grade automation blueprints for freelancers, developers, hobbyists, and creators.</p>
+        <div class="system-status">
+          <span class="status-pulse"></span>
+          <span>SYSTEMS OPERATIONAL • ALL BLUEPRINTS VERIFIED</span>
+        </div>
       </div>
 
       <div class="columns">
@@ -50,101 +67,171 @@ const columns = [
       </div>
     </div>
 
-    <hr />
+    <div class="footer-divider"></div>
 
     <div class="footer-bottom">
-      <p>&copy; {year} Workflow Vault</p>
-      <p>Learn &middot; Build &middot; Automate</p>
+      <p>&copy; {year} Workflow Vault. Open-source under MIT License.</p>
+      <div class="footer-meta-tags">
+        <span class="meta-tag">ASTRO 5.x</span>
+        <span class="meta-tag">SSG 100%</span>
+        <span class="meta-tag">ZERO TRACKING</span>
+      </div>
     </div>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    padding: var(--space-6) 0 var(--space-4);
+    padding: 4.5rem 0 2.5rem;
+    background: var(--bg-surface);
     border-top: 1px solid var(--border);
   }
 
   .footer-top {
     display: grid;
-    grid-template-columns: 1.2fr 2fr;
-    gap: var(--space-5);
+    grid-template-columns: 1.25fr 2fr;
+    gap: 3.5rem;
   }
 
-  .brand .logo {
-    font-size: 1.3rem;
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    letter-spacing: -.03em;
-    margin-bottom: var(--space-2);
+    letter-spacing: -0.03em;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 0.85rem;
   }
 
-  .brand .logo span {
+  .logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-xs);
+    background: linear-gradient(135deg, #1e2330 0%, #12151d 100%);
+    border: 1px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    box-shadow: var(--specular);
+  }
+
+  .logo-accent {
     color: var(--accent);
   }
 
-  .brand .tagline {
-    max-width: 320px;
-    font-size: var(--fs-sm);
+  .tagline {
+    max-width: 340px;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .system-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-subtle);
+    padding: 0.25rem 0.55rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    letter-spacing: 0.05em;
+  }
+
+  .status-pulse {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
   }
 
   .columns {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
+    gap: 2rem;
   }
 
   .col-heading {
     color: var(--text);
     font-weight: 700;
-    font-size: var(--fs-xs);
-    letter-spacing: .05em;
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    margin-bottom: 1rem;
   }
 
   .column ul {
     list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: .65rem;
+    gap: 0.6rem;
   }
 
   .column a {
     color: var(--text-muted);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    text-decoration: none;
     transition: var(--transition);
   }
 
   .column a:hover {
     color: var(--text);
+    transform: translateX(2px);
+    display: inline-block;
   }
 
-  hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: var(--space-5) 0 var(--space-3);
+  .footer-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 3.5rem 0 1.5rem;
   }
 
   .footer-bottom {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    font-size: var(--fs-xs);
-    color: var(--text-muted);
+    gap: 1rem;
+    font-size: var(--fs-2xs);
+    color: var(--text-subtle);
   }
 
-  .footer-bottom p {
-    color: var(--text-muted);
+  .footer-meta-tags {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  @media (max-width: 800px) {
+  .meta-tag {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-subtle);
+  }
+
+  @media (max-width: 768px) {
     .footer-top {
       grid-template-columns: 1fr;
+      gap: 2.5rem;
     }
 
     .columns {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 

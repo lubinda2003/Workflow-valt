@@ -1,91 +1,222 @@
 ---
-const categories = [
-  { name: "AI Agents", tools: "OpenAI · Claude · Gemini · Groq" },
-  { name: "n8n", tools: "Self-hosted automation" },
-  { name: "Make", tools: "Visual scenario builder" },
-  { name: "Zapier", tools: "No-code integrations" },
-  { name: "GitHub Actions", tools: "CI/CD & repo automation" },
-  { name: "Cloudflare Workers", tools: "Edge functions & APIs" },
-  { name: "Data & OCR", tools: "Notion · Airtable · Sheets" },
-  { name: "APIs", tools: "Webhooks & integrations" },
-];
+import { getAllCategories } from "../../lib/categories.js";
+import { getAllWorkflows } from "../../lib/workflows.js";
 
-function slugify(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
+const allCategories = await getAllCategories();
+const allWorkflows = await getAllWorkflows();
 
-const preview = categories.slice(0, 4);
+const categoriesWithCount = allCategories.map((cat) => {
+  const count = allWorkflows.filter(
+    (w) => w.category?.toLowerCase() === cat.name.toLowerCase() ||
+           w.category?.toLowerCase() === cat.slug.toLowerCase()
+  ).length;
+  return {
+    ...cat,
+    count,
+  };
+});
 ---
 
-<section class="categories">
+<section class="categories-section">
   <div class="container">
-    <div class="heading">
-      <p class="eyebrow">Browse by Category</p>
-      <h2>Find your stack</h2>
+    <div class="heading-row">
+      <div class="heading">
+        <div class="section-tag">
+          <span class="tag-dot"></span>
+          <span>TAXONOMY &amp; RUNTIMES</span>
+        </div>
+        <h2>Engineered by Stack</h2>
+        <p class="subtitle">Filter blueprints across orchestration engines, edge runtimes, and webhook integrations.</p>
+      </div>
+
+      <a href="/categories" class="view-all-btn">
+        <span>All 8 categories</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </a>
     </div>
 
     <div class="grid categories-grid">
-      {preview.map((c) => (
-        <a href={`/categories/${slugify(c.name)}`} class="card category-card">
+      {categoriesWithCount.slice(0, 4).map((c) => (
+        <a href={`/categories/${c.slug}`} class="card category-card">
+          <div class="cat-top">
+            <span class="cat-badge">{c.count} {c.count === 1 ? 'guide' : 'guides'}</span>
+            <div class="cat-arrow-box">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+          </div>
           <h3>{c.name}</h3>
-          <p>{c.tools}</p>
+          <p>{c.description || `Production blueprints and automation patterns for ${c.name}.`}</p>
         </a>
       ))}
     </div>
-
-    <a href="/categories" class="view-all">View all categories &rarr;</a>
   </div>
 </section>
 
 <style>
-  .heading {
-    margin-bottom: var(--space-6);
+  .categories-section {
+    padding: 3.5rem 0;
+    border-top: 1px solid var(--border-subtle);
   }
 
-  .eyebrow {
-    color: var(--accent);
+  .heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .heading {
+    max-width: 600px;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: .15em;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .heading h2 {
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
+  }
+
+  .subtitle {
+    margin-top: 0.5rem;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
     font-size: var(--fs-xs);
-    text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .view-all-btn:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    color: var(--text);
+    transform: translateX(2px);
   }
 
   .categories-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
   }
 
   .category-card {
-    padding: var(--space-3);
-    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 1.35rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    transition: var(--transition);
+    height: 100%;
+  }
+
+  .category-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .cat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+  }
+
+  .cat-badge {
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-xs);
+  }
+
+  .cat-arrow-box {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-subtle);
+    transition: var(--transition);
+  }
+
+  .category-card:hover .cat-arrow-box {
+    color: var(--text);
+    border-color: var(--border-strong);
+    transform: translateX(2px);
   }
 
   .category-card h3 {
     font-size: 1.05rem;
-    margin-bottom: .4rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.35rem;
   }
 
   .category-card p {
     font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
   }
 
-  .view-all {
-    display: inline-block;
-    margin-top: var(--space-4);
-    color: var(--accent);
-    font-weight: 600;
-    font-size: var(--fs-sm);
-  }
-
-  @media (max-width: 900px) {
-    .categories-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (max-width: 768px) {
+    .categories-section {
+      padding: 2.5rem 0;
     }
-  }
 
-  @media (max-width: 500px) {
+    .heading-row {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
     .categories-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
     }
   }
 </style>
+

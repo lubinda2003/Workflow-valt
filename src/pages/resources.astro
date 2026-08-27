@@ -2,25 +2,288 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
+import CodeBlock from "../components/content/CodeBlock.astro";
+
+const resources = [
+  {
+    title: "n8n + Caddy Docker Compose Stack",
+    type: "Docker Compose",
+    category: "n8n",
+    description: "Production-ready docker-compose.yml and Caddyfile for deploying self-hosted n8n with automatic Let's Encrypt SSL.",
+    code: `services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    environment:
+      - N8N_HOST=n8n.example.com
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.example.com/
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data`,
+    language: "yaml",
+    guideLink: "/workflows/n8n-docker-caddy"
+  },
+  {
+    title: "Cloud VPS Docker & Firewall Bootstrap (Ubuntu/Debian)",
+    type: "Bash Script",
+    category: "Infrastructure",
+    description: "1-minute script to configure a fresh $4/mo VPS (DigitalOcean, Hetzner, Linode) with Docker, Compose, and hardened UFW firewall rules.",
+    code: `#!/usr/bin/env bash
+# Quick VPS setup for automation nodes
+set -euo pipefail
+
+echo "==> Updating apt repositories..."
+sudo apt update && sudo apt upgrade -y
+
+echo "==> Installing Docker & Compose..."
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker "$USER"
+
+echo "==> Configuring UFW firewall..."
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment 'SSH'
+sudo ufw allow 80/tcp comment 'HTTP'
+sudo ufw allow 443/tcp comment 'HTTPS'
+sudo ufw --force enable
+
+echo "==> Docker VPS Ready! Log out and log back in to apply docker group permissions."`,
+    language: "bash",
+    guideLink: "/about"
+  },
+  {
+    title: "Cloudflare Edge Rate Limiter Worker",
+    type: "Worker Script",
+    category: "Cloudflare Workers",
+    description: "Sliding-window rate limiting proxy using Cloudflare Durable Objects to safeguard origin APIs.",
+    code: `export class RateLimiter {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.requests = [];
+  }
+
+  async fetch(request) {
+    const now = Date.now();
+    const windowMs = 60000;
+    this.requests = this.requests.filter(t => now - t < windowMs);
+
+    if (this.requests.length >= 60) {
+      return new Response('Too Many Requests', { status: 429 });
+    }
+
+    this.requests.push(now);
+    return new Response(JSON.stringify({ allowed: true, remaining: 60 - this.requests.length }));
+  }
+}`,
+    language: "javascript",
+    guideLink: "/workflows/cloudflare-rate-limit"
+  },
+  {
+    title: "Stripe HMAC Signature Verifier & Express Webhook Handler",
+    type: "Node.js Script",
+    category: "APIs",
+    description: "Production Stripe webhook listener verifying raw cryptographic HMAC signatures and updating subscription states in PostgreSQL.",
+    code: `import express from 'express';
+import Stripe from 'stripe';
+import { Pool } from 'pg';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const app = express();
+
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(\`Webhook Error: \${err.message}\`);
+  }
+
+  if (event.type === 'customer.subscription.updated') {
+    const sub = event.data.object;
+    await pool.query(
+      'UPDATE subscriptions SET status = $1, current_period_end = to_timestamp($2) WHERE stripe_subscription_id = $3',
+      [sub.status, sub.current_period_end, sub.id]
+    );
+  }
+
+  res.json({ received: true });
+});`,
+    language: "javascript",
+    guideLink: "/workflows/stripe-webhook-postgres-sync"
+  },
+  {
+    title: "GitHub Actions CI/CD Pipeline Template",
+    type: "Workflow YAML",
+    category: "GitHub Actions",
+    description: "Automated test, lint, and Cloudflare Pages deploy action with concurrency controls and secret injection.",
+    code: `name: Deploy to Cloudflare Pages
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=workflow-vault`,
+    language: "yaml",
+    guideLink: "/workflows/github-actions-deploy"
+  },
+  {
+    title: "Claude & Notion Article Summarizer",
+    type: "Node.js Script",
+    category: "AI Agents",
+    description: "Batch fetch unprocessed Notion database pages, generate structured executive summaries with Claude 3.5 Sonnet, and write back blocks.",
+    code: `import { Client } from '@notionhq/client';
+import Anthropic from '@anthropic-ai/sdk';
+
+const notion = new Client({ auth: process.env.NOTION_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const response = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1000,
+  messages: [{ role: 'user', content: 'Summarize key takeaways in 3 concise bullet points.' }]
+});
+
+console.log(response.content[0].text);`,
+    language: "javascript",
+    guideLink: "/workflows/claude-notion-summaries"
+  },
+  {
+    title: "Make (Integromat) Webhook Router Scenario Blueprint",
+    type: "Scenario JSON",
+    category: "Make",
+    description: "Exportable scenario definition routing incoming webhooks to Airtable with duplicate deduplication and error handler fallback.",
+    code: `{
+  "name": "Webhook to Airtable Sync",
+  "scenario": "Airtable Inbound Router",
+  "trigger": "Custom Webhook (Instant)",
+  "idempotencyFilter": "SEARCH Airtable WHERE Event_ID = {{1.eventId}}",
+  "branches": [
+    { "condition": "totalBundles == 0", "action": "Airtable: Create Record (Events)" },
+    { "condition": "totalBundles > 0", "action": "Ignore Duplicate" }
+  ],
+  "errorHandler": {
+    "action": "Airtable: Create Record (Dead-Letter Queue)",
+    "directive": "Resume"
+  }
+}`,
+    language: "json",
+    guideLink: "/workflows/make-webhook-airtable-sync"
+  }
+];
+
+const resourcesSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://workflowvault.dev"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Resources",
+        "item": "https://workflowvault.dev/resources"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Automation Resources, Stacks & Infrastructure Templates",
+    "description": "Ready-to-use configuration files, Docker Compose templates, VPS bootstrap scripts, and boilerplate scripts for Workflow Vault guides.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": resources.map((r, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "name": r.title,
+        "description": r.description
+      }))
+    }
+  }
+];
 ---
 
 <BaseLayout
-  title="Resources — Workflow Vault"
-  description="Templates, downloads, and reference material for Workflow Vault guides. Coming soon."
+  title="Code Templates & Starter Resources — Workflow Vault"
+  description="Copy production-ready Docker Compose stacks, VPS scripts, Cloudflare Worker scripts, GitHub Actions, and webhook starter files."
+  schema={resourcesSchema}
 >
 
 <Header />
 
 <main>
-  <section class="resources-placeholder">
+  <section class="resources-hero">
     <div class="container">
-      <p class="eyebrow">Resources</p>
-      <h1>Templates and downloads, coming soon</h1>
+      <div class="section-tag">
+        <span class="tag-dot"></span>
+        <span>DEVELOPER &amp; BUILDER TOOLKIT</span>
+      </div>
+      <h1>Templates, Stacks &amp; Boilerplates</h1>
       <p class="subtitle">
-        This is where you'll find n8n workflow exports, Worker boilerplates, and other downloadable
-        assets that pair with the guides. It's not live yet, check back soon.
+        Copyable Docker Compose stacks, Cloud VPS bootstrap scripts, edge worker templates, and webhook handlers for freelancers, developers, and hobbyists.
       </p>
-      <a href="/workflows" class="button">Browse workflows instead</a>
+    </div>
+  </section>
+
+  <section class="resources-grid-section">
+    <div class="container">
+      <div class="resources-list">
+        {resources.map((item) => (
+          <div class="resource-card">
+            <div class="resource-header">
+              <div>
+                <div class="resource-meta">
+                  <span class="resource-type">{item.type}</span>
+                  <span class="resource-cat">{item.category}</span>
+                </div>
+                <h2>{item.title}</h2>
+                <p class="resource-desc">{item.description}</p>
+              </div>
+              <a href={item.guideLink} class="resource-guide-link">
+                View Full Guide
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </a>
+            </div>
+            <div class="resource-code">
+              <CodeBlock language={item.language} code={item.code} />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 </main>
@@ -30,28 +293,168 @@ import Footer from "../components/layout/Footer.astro";
 </BaseLayout>
 
 <style>
-  .resources-placeholder {
-    padding: var(--space-6) 0;
+  .resources-hero {
+    padding: 3.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.05) 0%, transparent 60%);
   }
 
-  .eyebrow {
-    color: var(--accent);
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: .15em;
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
   }
 
-  h1 {
-    font-size: clamp(2.25rem, 5vw, 3.5rem);
-    max-width: 700px;
-    margin-bottom: var(--space-3);
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .resources-hero h1 {
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
+    max-width: 760px;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.03em;
   }
 
   .subtitle {
-    max-width: 560px;
-    font-size: var(--fs-md);
-    margin-bottom: var(--space-4);
+    max-width: 660px;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .resources-grid-section {
+    padding: 3rem 0 4.5rem;
+  }
+
+  .resources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .resource-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+
+  .resource-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .resource-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .resource-type {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.45rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius-xs);
+  }
+
+  .resource-cat {
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .resource-header h2 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    margin: 0.25rem 0 0.35rem 0;
+    color: var(--text);
+  }
+
+  .resource-desc {
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 640px;
+    line-height: 1.6;
+  }
+
+  .resource-guide-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+
+  .resource-guide-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--surface-hover);
+  }
+
+  .resource-code {
+    margin-top: 0.5rem;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 768px) {
+    .resources-hero {
+      padding: 2.5rem 0 1.5rem;
+    }
+
+    .resources-grid-section {
+      padding: 2rem 0 3.5rem;
+    }
+
+    .resource-card {
+      padding: 1.25rem;
+    }
+
+    .resource-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.85rem;
+    }
+
+    .resource-guide-link {
+      width: 100%;
+      justify-content: center;
+    }
   }
 </style>

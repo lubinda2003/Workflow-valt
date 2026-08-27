@@ -8,106 +8,281 @@ export interface Props {
   why?: string;
   expectedResult?: string;
   code?: { language: string; code: string };
+  stepId?: string;
 }
 
-const { number, title, content, why, expectedResult, code } = Astro.props;
+const { number, title, content, why, expectedResult, code, stepId = `step-${number}` } = Astro.props;
 ---
 
-<div class="step">
-  <div class="step-marker">{String(number).padStart(2, "0")}</div>
-  <div class="step-body">
-    <h3>{title}</h3>
-    <p>{content}</p>
-    {code && <CodeBlock language={code.language} code={code.code} />}
-    {why && (
-      <div class="step-note step-why">
-        <span class="step-note-label">Why this matters</span>
-        <p>{why}</p>
+<div class="step" data-step-id={stepId} id={stepId}>
+  <div class="step-card-inner">
+    <div class="step-header-row">
+      <button
+        type="button"
+        class="step-marker"
+        aria-label={`Toggle completion for step ${number}`}
+        title="Click to mark step completed"
+      >
+        <span class="step-number">{String(number).padStart(2, "0")}</span>
+        <span class="step-check" aria-hidden="true">&#x2713;</span>
+      </button>
+
+      <div class="step-title-wrap">
+        <div class="step-meta-badge">
+          <span class="step-badge-text">PHASE {number}</span>
+        </div>
+        <h3>{title}</h3>
       </div>
-    )}
-    {expectedResult && (
-      <div class="step-note step-expected">
-        <span class="step-note-label">What you should see</span>
-        <p>{expectedResult}</p>
+    </div>
+
+    <div class="step-body">
+      <div class="step-description">
+        <p>{content}</p>
       </div>
-    )}
+
+      {code && (
+        <div class="step-code-container">
+          <CodeBlock language={code.language} code={code.code} />
+        </div>
+      )}
+
+      {(why || expectedResult) && (
+        <div class={`step-notes-grid ${why && expectedResult ? 'has-both' : 'single-note'}`}>
+          {why && (
+            <div class="step-note step-why">
+              <div class="step-note-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span class="step-note-label">Why this matters</span>
+              </div>
+              <p>{why}</p>
+            </div>
+          )}
+
+          {expectedResult && (
+            <div class="step-note step-expected">
+              <div class="step-note-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span class="step-note-label">Expected Output</span>
+              </div>
+              <p>{expectedResult}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   </div>
 </div>
 
 <style>
   .step {
-    display: flex;
-    gap: var(--space-3);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--border);
+    padding: 1.75rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.2s ease, opacity 0.2s ease;
   }
 
   .step:last-child {
     border-bottom: none;
+    padding-bottom: 0.5rem;
+  }
+
+  .step-card-inner {
+    background: transparent;
+    transition: var(--transition);
+  }
+
+  .step-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
   }
 
   .step-marker {
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-xs);
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     color: var(--accent);
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-weight: 700;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    margin-top: 0.15rem;
   }
 
-  .step-body {
+  .step-marker:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.04);
+  }
+
+  .step-check {
+    display: none;
+    font-size: 1.15rem;
+    color: #ffffff;
+  }
+
+  .step.completed .step-marker {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  }
+
+  .step.completed .step-number {
+    display: none;
+  }
+
+  .step.completed .step-check {
+    display: block;
+  }
+
+  .step.completed .step-title-wrap h3 {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .step.completed .step-badge-text {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .step-title-wrap {
     flex: 1;
     min-width: 0;
   }
 
-  .step-body h3 {
-    font-size: 1.1rem;
-    margin-bottom: .5rem;
+  .step-meta-badge {
+    margin-bottom: 0.25rem;
   }
 
-  .step-body p {
+  .step-badge-text {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-xs);
+  }
+
+  .step-title-wrap h3 {
+    font-size: clamp(1.125rem, 1.6vw, 1.25rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 0;
+    transition: color 0.2s ease;
+  }
+
+  .step-body {
+    padding-left: calc(42px + 1rem);
+  }
+
+  .step-description p {
     font-size: var(--fs-sm);
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .step-code-container {
+    margin-top: 0.85rem;
+  }
+
+  .step-notes-grid {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 860px) {
+    .step-notes-grid.has-both {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .step-note {
-    margin-top: var(--space-3);
-    padding: var(--space-3);
-    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--border);
     background: var(--surface);
   }
 
+  .step-note-header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+  }
+
   .step-note p {
+    font-size: var(--fs-xs);
     color: var(--text-muted);
+    line-height: 1.55;
     margin: 0;
   }
 
   .step-note-label {
-    display: block;
-    font-size: var(--fs-xs);
+    font-size: 0.6875rem;
     font-weight: 700;
+    font-family: var(--font-mono);
     text-transform: uppercase;
-    letter-spacing: .06em;
-    margin-bottom: .4rem;
+    letter-spacing: 0.06em;
+  }
+
+  .step-why {
+    border-color: var(--border-strong);
+    background: var(--surface-2);
+  }
+
+  .step-why .step-note-header {
+    color: var(--accent);
   }
 
   .step-why .step-note-label {
-    color: var(--text-muted);
+    color: var(--text);
   }
 
   .step-expected {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .step-expected .step-note-header {
+    color: #10b981;
   }
 
   .step-expected .step-note-label {
-    color: var(--accent);
+    color: #10b981;
+  }
+
+  @media (max-width: 640px) {
+    .step {
+      padding: 1.25rem 0;
+    }
+
+    .step-body {
+      padding-left: 0;
+      margin-top: 0.75rem;
+    }
   }
 </style>

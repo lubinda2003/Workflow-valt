@@ -1,29 +1,70 @@
 ---
 export interface Props {
   label: string;
-  tone?: "accent" | "muted";
+  tone?: "accent" | "muted" | "auto";
 }
 
-const { label, tone = "accent" } = Astro.props;
+const { label, tone = "auto" } = Astro.props;
+
+const normalized = label.toLowerCase();
+let resolvedTone = tone;
+
+if (tone === "auto") {
+  if (normalized.includes("begin") || normalized.includes("easy")) {
+    resolvedTone = "green";
+  } else if (normalized.includes("inter") || normalized.includes("med")) {
+    resolvedTone = "amber";
+  } else if (normalized.includes("adv") || normalized.includes("hard")) {
+    resolvedTone = "purple";
+  } else {
+    resolvedTone = "accent";
+  }
+}
 ---
 
-<span class={`badge badge-${tone}`}>{label}</span>
+<span class={`badge badge-${resolvedTone}`}>
+  <span class="badge-indicator"></span>
+  <span>{label}</span>
+</span>
 
 <style>
   .badge {
     display: inline-flex;
     align-items: center;
-    font-size: var(--fs-xs);
+    gap: 0.35rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    padding: .3rem .7rem;
-    border-radius: 999px;
+    font-family: var(--font-mono);
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-xs);
     text-transform: uppercase;
-    letter-spacing: .04em;
+    letter-spacing: 0.05em;
+    line-height: 1;
   }
 
-  .badge-accent {
-    background: rgba(255, 107, 0, .12);
-    color: var(--accent);
+  .badge-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .badge-green {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .badge-amber, .badge-accent {
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.28);
+  }
+
+  .badge-purple {
+    background: rgba(168, 85, 247, 0.1);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.28);
   }
 
   .badge-muted {

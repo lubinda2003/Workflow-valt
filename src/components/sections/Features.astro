@@ -1,20 +1,32 @@
 ---
 const features = [
   {
-    title: "Built for production, not proof-of-concept",
-    description: "Every guide walks through real error handling, retries, and monitoring patterns — not just the happy path.",
+    idx: "01",
+    tag: "RESILIENCE",
+    title: "Battle-Tested Failure Modes",
+    description: "Every guide includes exponential backoffs, dead-letter webhook queues, and structured error schemas—never just the happy path.",
+    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
   },
   {
-    title: "Step-by-step, not a demo video",
-    description: "Exact configuration and code, laid out in order — no scrubbing through a 40-minute video to find one setting.",
+    idx: "02",
+    tag: "SPECIFICATION",
+    title: "Explicit Types & Declarative Config",
+    description: "Exact step-by-step parameter definitions, JSON payloads, and Docker Compose scripts arranged sequentially for rapid replication.",
+    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`
   },
   {
-    title: "Source code included",
-    description: "Clone the repo, copy the workflow JSON, or fork the Worker. Every guide ships with the real files.",
+    idx: "03",
+    tag: "INDEPENDENCE",
+    title: "100% Copyable Code Artifacts",
+    description: "Export workflow JSONs, raw TypeScript Worker functions, and CI/CD GitHub workflows directly without third-party subscriptions.",
+    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
   },
   {
-    title: "Multi-tool, not vendor-locked",
-    description: "n8n, Make, Zapier, Workers, Actions — pick the stack that fits your budget and skill level, not ours.",
+    idx: "04",
+    tag: "COMPOSABILITY",
+    title: "Multi-Engine Interoperability",
+    description: "From self-hosted n8n nodes to Cloudflare edge KV stores and Make webhooks—architect systems that match your exact stack budget.",
+    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`
   },
 ];
 ---
@@ -22,14 +34,24 @@ const features = [
 <section class="features">
   <div class="container">
     <div class="heading">
-      <p class="eyebrow">Why Workflow Vault</p>
-      <h2>Built for people who ship</h2>
+      <div class="section-tag">
+        <span class="tag-dot"></span>
+        <span>CORE ARCHITECTURE</span>
+      </div>
+      <h2>Engineered for anyone who automates</h2>
+      <p class="subtitle">Why freelancers, developers, hobbyists, and creators rely on Workflow Vault for reliable systems.</p>
     </div>
 
     <div class="grid features-grid">
       {features.map((f) => (
         <div class="card feature-card">
-          <span class="mark"></span>
+          <div class="card-header-bar">
+            <div class="feature-icon" set:html={f.icon} />
+            <div class="feature-meta">
+              <span class="feature-idx">{f.idx}</span>
+              <span class="feature-tag">{f.tag}</span>
+            </div>
+          </div>
           <h3>{f.title}</h3>
           <p>{f.description}</p>
         </div>
@@ -39,48 +61,127 @@ const features = [
 </section>
 
 <style>
-  .heading {
-    max-width: 560px;
-    margin-bottom: var(--space-6);
+  .features {
+    padding: 4rem 0;
+    border-top: 1px solid var(--border-subtle);
   }
 
-  .eyebrow {
-    color: var(--accent);
+  .heading {
+    max-width: 620px;
+    margin-bottom: 2.5rem;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.6875rem;
     font-weight: 700;
-    letter-spacing: .15em;
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .heading h2 {
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    color: var(--text-muted);
+    line-height: 1.5;
   }
 
   .features-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 
   .feature-card {
-    padding: var(--space-4);
-    border-radius: 20px;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
   }
 
-  .mark {
-    display: block;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--accent);
-    margin-bottom: var(--space-3);
+  .feature-card:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+  }
+
+  .card-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    box-shadow: var(--specular);
+  }
+
+  .feature-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .feature-idx {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-subtle);
+  }
+
+  .feature-tag {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-xs);
+    background: var(--accent-soft);
+    color: var(--accent);
+    letter-spacing: 0.06em;
   }
 
   .feature-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: var(--space-1);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.35;
   }
 
   .feature-card p {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 768px) {
     .features-grid {
       grid-template-columns: 1fr;
     }

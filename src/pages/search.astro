@@ -16,11 +16,33 @@ const categories = (await getAllCategories()).sort((a, b) =>
 const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
   a.localeCompare(b)
 );
+
+const searchSchema = [
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://workflowvault.dev"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Search",
+        "item": "https://workflowvault.dev/search"
+      }
+    ]
+  }
+];
 ---
 
 <BaseLayout
-  title="Search — Workflow Vault"
-  description="Search and filter every workflow guide by category, difficulty, or tool."
+  title="Search Automation Blueprints — Workflow Vault"
+  description="Search and filter every production workflow guide in the vault by stack, difficulty, reading time, or integration tool."
+  schema={searchSchema}
 >
 
 <Header />
@@ -180,58 +202,63 @@ const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
 
 <style>
   .search-hero {
-    padding: var(--space-6) 0 var(--space-4);
-    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 0 2rem;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .eyebrow {
     color: var(--accent);
     font-weight: 700;
-    letter-spacing: .15em;
+    letter-spacing: 0.12em;
     font-size: var(--fs-xs);
     text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    margin-bottom: 0.5rem;
   }
 
   .search-hero h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    margin-bottom: var(--space-2);
+    font-size: var(--fs-2xl);
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
   }
 
   .subtitle {
     max-width: 600px;
-    font-size: var(--fs-md);
-    margin-bottom: var(--space-4);
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
   }
 
   .search-bar input {
     width: 100%;
-    max-width: 480px;
-    padding: .9rem 1.25rem;
+    max-width: 520px;
+    padding: 0.85rem 1.25rem;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);
     font-size: var(--fs-sm);
     font-family: inherit;
+    transition: var(--transition);
   }
 
   .search-bar input::placeholder {
-    color: var(--text-muted);
+    color: var(--text-subtle);
   }
 
   .search-bar input:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
   }
 
   .filters {
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 0 2rem;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .filter-group {
-    margin-bottom: var(--space-3);
+    margin-bottom: 1.25rem;
   }
 
   .filter-group:last-child {
@@ -243,23 +270,24 @@ const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: .06em;
-    margin-bottom: .6rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
   }
 
   .filter-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: .5rem;
+    gap: 0.45rem;
   }
 
   .filter-chip {
-    padding: .5rem 1rem;
+    padding: 0.45rem 0.85rem;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text-muted);
     font-size: var(--fs-xs);
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     transition: var(--transition);
@@ -273,40 +301,50 @@ const tools = [...new Set(workflows.flatMap((w) => w.tools))].sort((a, b) =>
   .filter-chip.active {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: #ffffff;
   }
 
   .results {
-    padding: var(--space-5) 0;
+    padding: 2.5rem 0 4.5rem;
   }
 
   .results-count {
     font-size: var(--fs-sm);
     color: var(--text-muted);
-    margin-bottom: var(--space-4);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
   }
 
   .results-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .result-item {
+    height: 100%;
   }
 
   .empty-state {
     display: none;
     justify-content: center;
-    padding: var(--space-6) 0;
+    padding: 4rem 1rem;
     color: var(--text-muted);
-    font-size: var(--fs-md);
+    font-size: var(--fs-base);
+    text-align: center;
   }
 
-  @media (max-width: 900px) {
-    .results-grid {
-      grid-template-columns: 1fr 1fr;
+  @media (max-width: 768px) {
+    .search-hero {
+      padding: 2.5rem 0 1.5rem;
     }
-  }
 
-  @media (max-width: 600px) {
+    .results {
+      padding: 2rem 0 3.5rem;
+    }
+
     .results-grid {
       grid-template-columns: 1fr;
+      gap: 1.25rem;
     }
 
     .search-bar input {

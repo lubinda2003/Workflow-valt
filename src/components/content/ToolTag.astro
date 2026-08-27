@@ -6,16 +6,37 @@ export interface Props {
 const { label } = Astro.props;
 ---
 
-<span class="tool-tag">{label}</span>
+<span class="tool-tag">
+  <span class="tool-dot"></span>
+  <span>{label}</span>
+</span>
 
 <style>
   .tool-tag {
     display: inline-flex;
     align-items: center;
-    font-size: var(--fs-xs);
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
     color: var(--text-muted);
-    padding: .25rem .6rem;
+    padding: 0.2rem 0.55rem;
+    background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-xs);
+    line-height: 1;
+    transition: var(--transition);
+  }
+
+  .tool-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-subtle);
+  }
+
+  .tool-tag:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
   }
 </style>

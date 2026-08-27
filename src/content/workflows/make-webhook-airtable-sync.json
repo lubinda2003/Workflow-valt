@@ -1,0 +1,121 @@
+{
+  "slug": "make-webhook-airtable-sync",
+  "title": "Robust multi-branch webhook router with Make and Airtable",
+  "description": "Route, transform, and log inbound webhook events into Airtable with dead-letter error queues and rate-limited retries.",
+  "category": "Make",
+  "difficulty": "Intermediate",
+  "readingTime": "16 min",
+  "featured": true,
+  "tags": [
+    "Make",
+    "Airtable",
+    "Webhooks",
+    "Automation"
+  ],
+  "tools": [
+    "Make",
+    "Airtable",
+    "Webhooks"
+  ],
+  "cover": "/images/workflows/make-webhook-airtable-sync.webp",
+  "overview": "This guide walks you through building an enterprise-grade webhook routing pipeline using Make (formerly Integromat) and Airtable. Incoming event payloads from Stripe, Shopify, or custom apps are verified, routed through custom decision branches, deduplicated, and logged into structured Airtable tables with dedicated dead-letter error handling. Every technical term is explained in the Glossary before use.",
+  "whatYoullBuild": "A multi-branch Make scenario triggered by an instant custom webhook. The scenario validates input payloads, checks for duplicate event IDs using an Airtable lookup, branches into specific business logic paths (e.g., 'Payment Succeeded' vs 'Subscription Cancelled'), writes records with relational links, and captures unhandled exceptions into a dead-letter queue table for manual replay.",
+  "beforeYouBegin": "Budget about 25–35 minutes to set up your Make custom webhook, configure your Airtable Personal Access Token (PAT) with schema scopes, build your Airtable base, and test scenario runs. Make's free tier includes 1,000 operations/month, which is plenty for development. This guide is UNVERIFIED by Workflow Vault's automated testing suite — test against staging webhook payloads before pointing live traffic.",
+  "glossary": [
+    {
+      "term": "Make (formerly Integromat)",
+      "definition": "A visual integration platform that connects cloud apps and APIs via modular scenarios with built-in data transformation, looping, and error execution directives."
+    },
+    {
+      "term": "Make Scenario",
+      "definition": "A complete automated workflow in Make consisting of interconnected modules starting with a trigger and passing data packets (bundles) downstream."
+    },
+    {
+      "term": "Custom Webhook Module (Make)",
+      "definition": "An instant trigger module that generates a dedicated URL capable of receiving asynchronous HTTP POST requests and parsing JSON data structures automatically."
+    },
+    {
+      "term": "Router (Make)",
+      "definition": "A scenario module that splits execution flow into multiple distinct parallel branches based on conditional filter rules (e.g. matching event type names)."
+    },
+    {
+      "term": "Dead-Letter Queue (DLQ)",
+      "definition": "A storage repository or table where failed, malformed, or unprocessable webhook messages are isolated for alerting, auditing, and subsequent re-processing."
+    },
+    {
+      "term": "Airtable Personal Access Token (PAT)",
+      "definition": "A secret security token generated in Airtable's developer hub that provides scoped access (such as `data.records:read` and `data.records:write`) to specific Airtable bases."
+    },
+    {
+      "term": "Idempotency Key",
+      "definition": "A unique identifier (such as `evt_12345` from Stripe) sent with an event to guarantee that processing the webhook more than once does not result in duplicate records."
+    }
+  ],
+  "prerequisites": [
+    "[You'll need this already] A Make account (free tier or higher) at make.com.",
+    "[You'll need this already] An Airtable account with permission to create a new base and generate a Personal Access Token from airtable.com/create/tokens.",
+    "[You'll need this already] A tool or source that can dispatch test webhook payloads (such as curl, Postman, or Stripe CLI).",
+    "[You'll need this already] Familiarity with basic JSON data structures (keys, strings, numbers, arrays).",
+    "[Optional, not required] A Slack or Discord incoming webhook URL to receive instant dead-letter failure alerts."
+  ],
+  "steps": [
+    {
+      "title": "Create the Airtable base schema with an Error Log table",
+      "content": "Create a new Airtable base named 'Webhook Operations'. Set up two tables: 1) 'Events' (fields: `Event ID` [Single line text, primary], `Event Type` [Single select], `Payload` [Long text], `Status` [Single select: Processed, Failed], `Created Time` [Created time]). 2) 'Dead-Letter Queue' (fields: `Error ID` [Autonumber], `Raw Body` [Long text], `Error Message` [Long text], `Timestamp` [Created time], `Resolved` [Checkbox]).",
+      "why": "Having dedicated tables for successful operations and isolated error payloads guarantees you never lose webhook data when an external schema changes unexpectedly.",
+      "expectedResult": "Your Airtable base contains both tables with exact field names ready to receive records from Make."
+    },
+    {
+      "title": "Configure the Make Custom Webhook trigger",
+      "content": "In Make, create a new scenario. Add a 'Webhooks' -> 'Custom webhook' module as the starting trigger. Click 'Create a webhook', name it 'Airtable Inbound Router', and copy the unique URL provided by Make. Click 'Redetermine data structure' and send a sample POST request from your terminal using curl to let Make automatically infer the JSON schema.",
+      "why": "Sending a real sample payload allows Make to parse and map all nested fields visually in downstream modules without manual typing.",
+      "expectedResult": "Make shows 'Successfully determined data structure' and displays your sample fields in the module mapping drawer.",
+      "code": {
+        "language": "bash",
+        "code": "curl -X POST https://hook.eu2.make.com/YOUR_MAKE_WEBHOOK_ID \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"eventId\": \"evt_test_98765\",\n    \"eventType\": \"payment.success\",\n    \"customerEmail\": \"alex@example.com\",\n    \"amount\": 4900,\n    \"currency\": \"usd\",\n    \"timestamp\": \"2024-09-23T15:00:00Z\"\n  }'"
+      }
+    },
+    {
+      "title": "Add an Idempotency lookup in Airtable",
+      "content": "Add an 'Airtable' -> 'Search Records' module directly after the Webhook. Connect your Airtable account via Personal Access Token. Set Base to 'Webhook Operations', Table to 'Events', and add a formula filter: `{Event ID} = '{{1.eventId}}'`. Set 'Max records' to 1.",
+      "why": "Payment gateways and webhook providers frequently retry events on network hiccups. Checking whether `eventId` has already been recorded prevents duplicate invoice creation or billing discrepancies.",
+      "expectedResult": "When executed, the module outputs 0 bundles for new events or 1 bundle if the event was already processed."
+    },
+    {
+      "title": "Attach a Router with conditional filters",
+      "content": "Add a 'Flow Control' -> 'Router' module. Create Branch 1 for new events with the filter condition: `Total number of bundles from Search Records Equal to 0`. Create Branch 2 for duplicate warnings (`Total number of bundles Greater than 0`). On Branch 1, add an 'Airtable' -> 'Create a Record' module mapping `Event ID`, `Event Type`, `Payload` (using `toJSON(1)`), and setting `Status` to 'Processed'.",
+      "why": "Routers isolate separate business pathways so that duplicate events are gracefully acknowledged without re-triggering expensive actions.",
+      "expectedResult": "New payloads travel down Branch 1 and insert a record into Airtable, while duplicate payloads bypass insertion."
+    },
+    {
+      "title": "Attach an Error Handler Directive (Dead-Letter Queue)",
+      "content": "Right-click the 'Airtable Create a Record' module and select 'Add error handler'. Choose 'Airtable' -> 'Create a Record', point it to the 'Dead-Letter Queue' table, map `Raw Body` to `{{1}}` and `Error Message` to `{{[Error].message}}`. Connect a 'Commit' or 'Resume' directive at the end of the error branch.",
+      "why": "Without an explicit error handler, an API outage or schema mismatch causes Make to pause the entire scenario. Adding an error handler captures the problematic event safely and lets the scenario continue processing subsequent events.",
+      "expectedResult": "If Airtable returns an API rate-limit or validation error, Make routes the payload into the Dead-Letter Queue table and completes the execution run successfully."
+    }
+  ],
+  "architecture": "External service sends HTTP POST webhook -> Make Custom Webhook receives request -> Airtable Search module checks for eventId -> Router filters duplicate vs new packets -> Primary branch records event into Airtable -> Error handler captures exceptions into Dead-Letter Queue table.",
+  "result": "A fault-tolerant webhook processing engine capable of handling high-volume data streams with built-in deduplication and automated dead-letter error logging in Airtable. As with all Workflow Vault guides, this guide is UNVERIFIED — test thoroughly in sandbox before production.",
+  "troubleshooting": [
+    {
+      "issue": "Make webhook returns 200 OK but scenario does not run",
+      "cause": "The scenario is toggled 'OFF' in the Make dashboard, or the scenario is waiting in manual queue mode.",
+      "fix": "Toggle the scenario switch to 'ON' at the bottom left of the Make scenario editor."
+    },
+    {
+      "issue": "Airtable module returns 401 Unauthorized or 403 Forbidden",
+      "cause": "Personal Access Token is missing required scopes (`data.records:read`, `data.records:write`) or base access.",
+      "fix": "Regenerate your PAT at airtable.com/create/tokens with full data.records permissions for the target base."
+    },
+    {
+      "issue": "Airtable Create Record fails with 'INVALID_VALUE_FOR_COLUMN'",
+      "cause": "A single-select field received a value string that does not exist in Airtable's pre-configured options list.",
+      "fix": "In Airtable, enable 'Typecast' in the Make module settings or add the expected option to the Single Select field."
+    }
+  ],
+  "nextSteps": [
+    "Add an automated Slack or Discord webhook alert on the error handler branch for instant incident notification.",
+    "Build a secondary Make scenario with a webhook trigger that iterates through resolved Dead-Letter Queue rows to replay them.",
+    "Add signature verification using a Make Crypto/HMAC module for Stripe or Shopify webhook payloads."
+  ]
+}
