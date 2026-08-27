@@ -48,13 +48,15 @@ jobs:
           git config --global user.name "Workflow Vault Bot"
           git config --global user.email "bot@workflowvault.dev"
           
-          # Check if any new JSON files or documentation were modified
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Changes detected. Staging and committing..."
-            git add src/content/workflows/ public/og/ docs/
+          # Stage generated blueprints, assets, and documentation
+          git add -A src/content/workflows/ public/og/ docs/
+          
+          # Check if there are actual staged changes to commit
+          if ! git diff --cached --quiet; then
+            echo "New blueprints or assets detected. Committing..."
             git commit -m "chore(auto): autonomous blueprint published & verified [skip ci]"
             git push origin main
             echo "Successfully pushed updates to main branch."
           else
-            echo "No new blueprints to publish. Repository is fully up to date."
+            echo "No new blueprints to commit. Repository is fully up to date."
           fi
