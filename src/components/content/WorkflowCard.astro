@@ -1,6 +1,7 @@
 ---
 import Badge from "./Badge.astro";
 import ToolTag from "./ToolTag.astro";
+import WorkflowThumbnail from "./WorkflowThumbnail.astro";
 
 export interface Props {
   slug: string;
@@ -18,18 +19,16 @@ const { slug, title, description, category, difficulty, readingTime, tools = [],
 
 <a href={`/workflows/${slug}`} class="card workflow-card">
   <div class="cover">
-    {cover && <img src={cover} alt="" loading="lazy" onerror="this.remove()" />}
-    <div class="cover-fallback" aria-hidden="true">
-      <div class="circuit-grid"></div>
-      <div class="pipeline-preview-mini">
-        <span class="mini-node trigger"></span>
-        <span class="mini-line"></span>
-        <span class="mini-node process"></span>
-        <span class="mini-line"></span>
-        <span class="mini-node storage"></span>
-      </div>
-    </div>
-    <div class="cover-overlay"></div>
+    {cover ? (
+      <img src={cover} alt={title} loading="lazy" />
+    ) : (
+      <WorkflowThumbnail
+        slug={slug}
+        category={category}
+        tools={tools}
+        difficulty={difficulty}
+      />
+    )}
   </div>
 
   <div class="card-content">
@@ -58,7 +57,7 @@ const { slug, title, description, category, difficulty, readingTime, tools = [],
       </div>
 
       <span class="link">
-        <span>Inspect</span>
+        <span>Inspect Blueprint</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
@@ -80,6 +79,7 @@ const { slug, title, description, category, difficulty, readingTime, tools = [],
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
     position: relative;
+    text-decoration: none;
   }
 
   .workflow-card:hover {
@@ -110,62 +110,6 @@ const { slug, title, description, category, difficulty, readingTime, tools = [],
     transform: scale(1.04);
   }
 
-  .cover-fallback {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0f121a 0%, #161a24 100%);
-  }
-
-  .circuit-grid {
-    position: absolute;
-    inset: 0;
-    background-size: 20px 20px;
-    background-image: 
-      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  }
-
-  .pipeline-preview-mini {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.2rem;
-    background: rgba(9, 10, 15, 0.7);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xs);
-    backdrop-filter: blur(4px);
-    box-shadow: var(--specular);
-  }
-
-  .mini-node {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .mini-node.trigger { background: var(--text-subtle); }
-  .mini-node.process { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-  .mini-node.storage { background: #10b981; }
-
-  .mini-line {
-    width: 16px;
-    height: 1.5px;
-    background: var(--border-strong);
-  }
-
-  .cover-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    box-shadow: inset 0 -20px 30px -10px var(--surface);
-  }
-
   .card-content {
     display: flex;
     flex-direction: column;
@@ -191,7 +135,7 @@ const { slug, title, description, category, difficulty, readingTime, tools = [],
   }
 
   .workflow-card h3 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     line-height: 1.35;
     margin-bottom: 0.5rem;
