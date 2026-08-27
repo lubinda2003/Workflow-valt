@@ -1,0 +1,6 @@
+{
+  "name": "Workflow Vault",
+  "description": "Curated collection and documentation for developer workflows, AI automation, and cloud recipes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
