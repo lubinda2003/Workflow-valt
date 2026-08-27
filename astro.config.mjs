@@ -11,7 +11,7 @@ export default defineConfig({
   },
   vite: {
     server: {
-      hmr: process.env.DISABLE_HMR === "true" ? false : undefined
+      hmr: false
     }
   },
   adapter: cloudflare(),
